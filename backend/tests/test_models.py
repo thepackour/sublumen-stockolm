@@ -3,8 +3,8 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from backend.models.database import Base
-from backend.models.user import User
+from app.schemas.database import Base
+from app.schemas.user import User
 
 
 def test_create_tables_and_insert_user():

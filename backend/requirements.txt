@@ -9,3 +9,4 @@ langchain-google-genai
 sqlalchemy
 psycopg2-binary
 pytest
+finance-datareader

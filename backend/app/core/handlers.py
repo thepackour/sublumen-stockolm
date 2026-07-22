@@ -27,10 +27,10 @@ def register_exception_handlers(app: FastAPI):
         exc: Exception
     ):
         return JSONResponse(
-            status_code=ErrorCode.INTERNAL_SERVER_ERROR.status,
+            status_code=ErrorCode.GENERAL500_1.status,
             content={
-                "code": ErrorCode.INTERNAL_SERVER_ERROR.code,
-                "message": ErrorCode.INTERNAL_SERVER_ERROR.message,
+                "code": ErrorCode.GENERAL500_1.code,
+                "message": ErrorCode.GENERAL500_1.message,
                 "data": None
             }
         )

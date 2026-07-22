@@ -13,16 +13,25 @@ class ChatRequest(BaseModel):
 @router.post("/chat")
 async def chat(req: ChatRequest):
 
+    print(repr(req.question))
+
     result = agent.invoke(
         {
-            "input": req.question
+            "messages": [
+                {
+                    "role": "user",
+                    "content": req.question
+                }
+            ]
         }
     )
 
-    if isinstance(result, dict):
-        answer = result.get("text") or result.get("answer") or str(result)
+    message = result["messages"][-1]
+
+    if isinstance(message.content, list):
+        answer = message.content[0]["text"]
     else:
-        answer = str(result)
+        answer = message.content
 
     return {
         "answer": answer

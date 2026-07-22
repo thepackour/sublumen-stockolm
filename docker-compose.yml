@@ -4,6 +4,8 @@ services:
       context: ./frontend
     container_name: frontend
     restart: unless-stopped
+    env_file:
+      - ./frontend/.env
     networks:
       - stockolm-net
 

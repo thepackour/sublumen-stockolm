@@ -19,10 +19,11 @@ def fetch_json(path: str):
         return {"error": str(exc)}
 
 
-@st.cache_data(show_spinner=False)
 def post_json(path: str, payload: dict):
     try:
         response = requests.post(f"{BACKEND_URL}{path}", json=payload, timeout=8)
+        print(response.status_code) ################################
+        print(response.text)
         response.raise_for_status()
         return response.json()
     except Exception as exc:

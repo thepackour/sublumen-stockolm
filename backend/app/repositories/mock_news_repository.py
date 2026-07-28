@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 base_time = datetime(2026, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
 
-__NEWS_SAMPLES = [
+_NEWS_SAMPLES = [
     {
         "id": 1,
         "stock_id": 1,  # 가상의 삼성전자 ID
@@ -188,4 +188,8 @@ __NEWS_SAMPLES = [
 class NewsRepository:
 
     def get_news(self, query: str, stock: str = None, page: int = 1, size: int = 10):
-        return __NEWS_SAMPLES[:size] if size is not None else __NEWS_SAMPLES
+        return _NEWS_SAMPLES[:size] if size is not None else _NEWS_SAMPLES
+
+
+def get_news_repository():
+    return NewsRepository()

@@ -17,8 +17,9 @@ class News(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    url: Mapped[str] = mapped_column(String(255), nullable=False)
+    url: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     stock: Mapped[Optional["Stock"]] = relationship("Stock", back_populates="news_items")
+    embeddings: Mapped[Optional["NewsEmbeddings"]] = relationship("NewsEmbeddings", back_populates="news")

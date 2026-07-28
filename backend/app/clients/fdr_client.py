@@ -1,3 +1,5 @@
+from fastapi import Request
+
 import FinanceDataReader as fdr
 import pandas as pd
 
@@ -30,3 +32,9 @@ class StockSymbolService:
 
     def get_stock(self, symbol):
         return self.stocks[self.stocks["Symbol"] == symbol]
+
+
+def get_stock_symbol_service(
+        request: Request,
+) -> StockSymbolService:
+    return request.app.state.stock_symbol_service

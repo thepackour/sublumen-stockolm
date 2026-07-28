@@ -9,14 +9,16 @@ from app.api.v1.backtest import router as backtest_router
 from app.api.v1.chat import router as chat_router
 
 from app.core.handlers import register_exception_handlers
-from app.clients.fdr_client import StockSymbolService
+from app.container import container
 
-stock_symbol_service = StockSymbolService()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    stock_symbol_service.initialize()
-    yield
+    container.initialize()
+    try:
+        yield
+    finally:
+        container.shutdown()
 
 app = FastAPI(title="Sublumen Stockolm API", lifespan=lifespan)
 

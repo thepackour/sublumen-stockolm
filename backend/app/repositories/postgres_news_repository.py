@@ -10,48 +10,61 @@ from app.core.database import get_db
 
 class NewsRepository:
 
-    def __init__(self, db: Session):
-        self.db = db
+    def __init__(self, session_factory):
+        self.session_factory = session_factory
 
     def save(self, news: News):
-        self.db.add(news)
-        self.db.commit()
-        self.db.refresh(news)
-        return news
+        with self.session_factory() as db:
+            db.add(news)
+            db.commit()
+            db.refresh(news)
+            return news
 
     def save_all(self, news: list[News]):
-        stmt = (insert(News)
-        .values(news)
-        .on_conflict_do_nothing(
-            index_elements=["url"]
-        ))
+        with self.session_factory() as db:
+            stmt = (insert(News)
+            .values(news)
+            .on_conflict_do_nothing(
+                index_elements=["url"]
+            ))
 
-        result = self.db.execute(stmt).fetchall()
-        self.db.commit()
-        return result
+            result = db.execute(stmt).fetchall()
+            db.commit()
+            return result
 
     def find_by_url(self, url: str):
-        stmt = select(News).where(News.url == url)
-        return self.db.scalar(stmt)
+        with self.session_factory() as db:
+            stmt = select(News).where(News.url == url)
+            return self.db.scalar(stmt)
 
-    def find_latest(self, stock_id: int, limit: int = 10):
-        stmt = (
-            select(News)
-            .where(News.stock_id == stock_id)
-            .order_by(News.published_at.desc())
-            .limit(limit)
-        )
+    def find_latest_by_stock_id(self, stock_id: int, page: int = 1, size: int = 10):
+        with self.session_factory() as db:
+            stmt = (
+                select(News)
+                .where(News.stock_id == stock_id)
+                .order_by(News.published_at.desc())
+                .offset((page - 1) * size)
+                .limit(size)
+            )
 
-        return self.db.scalars(stmt).all()
-
-    def find_all(self):
-        stmt = select(News)
-
-        return self.db.scalars(stmt).all()
+            return db.scalars(stmt).all()
 
     def delete(self, news: News):
-        self.db.delete(news)
-        self.db.commit()
+        with self.session_factory() as db:
+            db.delete(news)
+            db.commit()
+
+    def find_all_by_ids(
+            self,
+            id_list: list[int],
+    ):
+        with self.session_factory() as db:
+            stmt = (
+                select(News)
+                .where(News.id.in_(id_list))
+            )
+
+            return db.scalars(stmt).all()
 
 
 def get_news_repository(

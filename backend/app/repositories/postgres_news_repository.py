@@ -20,7 +20,7 @@ class NewsRepository:
             db.refresh(news)
             return news
 
-    def save_all(self, news: list[News]):
+    def save_all(self, news: list[News]) -> list[News]:
         with self.session_factory() as db:
             stmt = (insert(News)
             .values(news)

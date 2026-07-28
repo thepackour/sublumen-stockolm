@@ -1,38 +1,21 @@
-from app.repositories.mock_stock_repository import StockRepository
+from fastapi import Depends
+
+from app.repositories.postgres_stock_repository import get_stock_repository, StockRepository
 import FinanceDataReader as fdr
-import pandas as pd
 from datetime import datetime
 
-repository = StockRepository()
+from app.clients.fdr_client import StockSymbolService
 
 
 class StockService:
 
-    def __init__(self):
-        krx = fdr.StockListing("KRX").rename(columns={"Code": "Symbol"})
-        nasdaq = fdr.StockListing("NASDAQ")
-
-        self.stocks = pd.concat([krx, nasdaq], ignore_index=True)
-
-    def search_stock(self, keyword, limit = None):
-        result = self.stocks[
-            self.stocks["Name"].str.contains(keyword, case=False, na=False)
-        ]
-
-        return result[:limit]
-        # return repository.search(keyword, limit)
-
-    def get_stock(self, symbol):
-        return self.stocks[self.stocks["Symbol"] == symbol]
-        # return repository.find(symbol)
-
-    def find_symbol(self, keyword):
-        result = self.search_stock(keyword)
-
-        if result.empty:
-            return None
-
-        return result.iloc[0]["Symbol"]
+    def __init__(
+            self,
+            stock_repository: StockRepository,
+            stock_symbol_service: StockSymbolService,
+    ):
+        self.stock_symbol_service = stock_symbol_service
+        self.stock_repository = stock_repository
 
     def get_stock_history(self, symbol, start_date = None, end_date = None):
 
@@ -74,3 +57,10 @@ class StockService:
             "volume": int(latest["Volume"]),
             "change": round(change, 2),
         }
+
+
+def get_stock_service(
+        repository: StockRepository = Depends(get_stock_repository),
+        stock_symbol_service: StockSymbolService = Depends(StockSymbolService),
+):
+    return StockService(repository, stock_symbol_service)

@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from app.api.v1.stock import router as stock_router
@@ -7,8 +9,16 @@ from app.api.v1.backtest import router as backtest_router
 from app.api.v1.chat import router as chat_router
 
 from app.core.handlers import register_exception_handlers
+from app.clients.fdr_client import StockSymbolService
 
-app = FastAPI(title="Sublumen Stockolm API")
+stock_symbol_service = StockSymbolService()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    stock_symbol_service.initialize()
+    yield
+
+app = FastAPI(title="Sublumen Stockolm API", lifespan=lifespan)
 
 register_exception_handlers(app)
 

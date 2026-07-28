@@ -1,6 +1,7 @@
 from fastapi import Depends
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.schemas.news import News
@@ -19,10 +20,15 @@ class NewsRepository:
         return news
 
     def save_all(self, news: list[News]):
-        self.db.add_all(news)
+        stmt = (insert(News)
+        .values(news)
+        .on_conflict_do_nothing(
+            index_elements=["url"]
+        ))
+
+        result = self.db.execute(stmt).fetchall()
         self.db.commit()
-        self.db.refresh(news)
-        return news
+        return result
 
     def find_by_url(self, url: str):
         stmt = select(News).where(News.url == url)

@@ -17,6 +17,7 @@ class News(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    url: Mapped[str] = mapped_column(String(255), nullable=False)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 

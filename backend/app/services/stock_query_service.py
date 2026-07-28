@@ -1,6 +1,7 @@
 from fastapi import Depends
 
-from app.repositories.postgres_stock_repository import get_stock_repository, StockRepository
+from app.container import container
+from app.repositories.postgres_stock_repository import StockRepository
 import FinanceDataReader as fdr
 from datetime import datetime
 
@@ -59,8 +60,8 @@ class StockService:
         }
 
 
-def get_stock_service(
-        repository: StockRepository = Depends(get_stock_repository),
-        stock_symbol_service: StockSymbolService = Depends(StockSymbolService),
-):
-    return StockService(repository, stock_symbol_service)
+def get_stock_service():
+    return StockService(
+        container.stock_repository,
+        container.stock_symbol_service,
+    )

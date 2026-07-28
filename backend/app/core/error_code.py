@@ -2,7 +2,9 @@ from enum import Enum
 
 class ErrorCode(Enum):
 
+    NEWS400_1 = (400, "NEWS_400_1", "검색 파라미터가 잘못되었습니다.")
     NEWS404_1 = (404, "NEWS404_1", "뉴스를 찾을 수 없습니다.")
+    NEWS500_1 = (500, "NEWS500_1", "뉴스 조회 API 호출에 실패했습니다.")
 
     ANALYSIS404_1 = (404, "ANALYSIS404_1", "분석을 찾을 수 없습니다.")
     ANALYSIS400_1 = (400, "ANALYSIS400_1", "분석 요청이 유효하지 않습니다.")

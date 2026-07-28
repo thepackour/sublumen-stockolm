@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 
-from app.services.stock_service import StockService
+from app.services.stock_query_service import StockService
 
 router = APIRouter(
     prefix="/api/v1/stocks",

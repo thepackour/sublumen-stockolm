@@ -1,6 +1,6 @@
 from langchain.tools import tool
 from app.clients.fdr_client import StockSymbolService
-from app.services.stock_service import StockService
+from app.services.stock_query_service import StockService
 
 
 class StockTool:

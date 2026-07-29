@@ -45,10 +45,12 @@ class Container:
             self.news_repository,
             self.news_embedding_repository,
             self.news_keyword_repository,
+            self.stock_repository,
             self.news_client,
             self.stock_symbol_service,
             self.news_embedding_service
         )
+
 
     def initialize(self):
         self.stock_collect_service.initialize()

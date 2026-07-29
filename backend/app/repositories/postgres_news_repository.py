@@ -35,7 +35,7 @@ class NewsRepository:
     def find_by_url(self, url: str):
         with self.session_factory() as db:
             stmt = select(News).where(News.url == url)
-            return self.db.scalar(stmt)
+            return db.scalar(stmt)
 
     def find_latest_by_stock_id(self, stock_id: int, page: int = 1, size: int = 10):
         with self.session_factory() as db:

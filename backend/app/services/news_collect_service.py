@@ -2,14 +2,14 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 
 from app.clients.fdr_client import StockSymbolService
-from app.clients.gemini_embedding import GeminiEmbeddingClient
 from app.clients.news_client import NewsClient
 from app.container import container
 from app.repositories.news_keyword_repository import NewsKeywordRepository
-from app.repositories.postgres_news_embedding_repository import NewsEmbeddingRepository, get_news_embedding_repository
-from app.repositories.postgres_news_repository import NewsRepository, get_news_repository
+from app.repositories.postgres_news_embedding_repository import NewsEmbeddingRepository
+from app.repositories.postgres_news_repository import NewsRepository
 from app.repositories.postgres_stock_repository import StockRepository
 from app.schemas import News
+from app.services.news_embedding_service import NewsEmbeddingService
 
 
 class NewsCollectService:
@@ -21,7 +21,7 @@ class NewsCollectService:
             stock_repository: StockRepository,
             news_client: NewsClient,
             stock_symbol_service: StockSymbolService,
-            embedding_client: GeminiEmbeddingClient,
+            news_embedding_service: NewsEmbeddingService,
     ):
         self.news_repository = news_repository
         self.news_embedding_repository = news_embedding_repository
@@ -29,18 +29,17 @@ class NewsCollectService:
         self.stock_repository = stock_repository
         self.news_client = news_client
         self.stock_symbol_service = stock_symbol_service
-        self.embedding_client = embedding_client
+        self.news_embedding_service = news_embedding_service
 
-    def collect_news(self):
+    def collect_news(self) -> dict:
         targets = self.news_keyword_repository.find_collect_targets(datetime.now())
         news = []
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
-            stock_name = self.stock_symbol_service.search_stock(target)
-            symbol = self.stock_symbol_service.get_stock(stock_name)["symbol"]
+            symbol = self.stock_symbol_service.find_symbol(target.keyword)
             stock_id = None
             if symbol is not None:
-                stock_id = self.stock_repository.find_by_symbol(symbol).id
+                stock_id = self.stock_repository.find_by_symbol(symbol).id  # 여기 쿼리 여러번 호출 안하도록 보완해야 함
             for item in data:
                 news.append(News(
                     stock_id=stock_id,
@@ -49,7 +48,12 @@ class NewsCollectService:
                     url=item["originallink"],
                     published_at=parsedate_to_datetime(item["pubDate"]),
                 ))
-        self.news_repository.save_all(news)
+        saved_news = self.news_repository.save_all(news)
+        embeddings = []
+        for n in saved_news: embeddings.extend(self.news_embedding_service.embed_news(n))
+        self.news_embedding_repository.save_all(embeddings)
+
+        return {"news_count": len(saved_news), "embeddings_count": len(embeddings)}
 
 
 def get_news_collect_service():
@@ -60,5 +64,5 @@ def get_news_collect_service():
         container.stock_repository,
         container.news_client,
         container.stock_symbol_service,
-        container.embedding_client,
+        container.news_embedding_service,
     )

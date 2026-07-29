@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Query, Depends
 
+from app.core.response import success
+from app.core.success_code import SuccessCode
+from app.services.news_collect_service import NewsCollectService
 from app.services.news_query_service import NewsQueryService
 
 
@@ -17,4 +20,11 @@ def get_news(
         service: NewsQueryService = Depends(NewsQueryService),
 ):
     res = service.get_news_by_keyword(query, page, size)
-    return {"data": res, "count": len(res)}
+    return success(SuccessCode.NEWS200_1, {"data": res, "count": len(res)})
+
+@router.post("/collect")
+def collect_news(
+        service: NewsCollectService = Depends(NewsCollectService),
+):
+    res = service.collect_news()
+    return success(SuccessCode.NEWS200_2, {"data": res})

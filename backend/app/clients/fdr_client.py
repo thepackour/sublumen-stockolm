@@ -1,4 +1,4 @@
-from fastapi import Request
+from typing import Optional
 
 import FinanceDataReader as fdr
 import pandas as pd
@@ -15,26 +15,23 @@ class StockSymbolService:
 
         self.stocks = pd.concat([krx, nasdaq], ignore_index=True)
 
-    def find_symbol(self, keyword):
+    def find_symbol(self, keyword: str) -> Optional[str]:
         result = self.search_stock(keyword)
 
-        if result.empty:
+        if len(result) == 0:
             return None
 
-        return result.iloc[0]["Symbol"]
+        return result[0]["Symbol"]
 
-    def search_stock(self, keyword, limit = None):
+    def search_stock(self, keyword: str, limit = None) -> list[dict]:
         result = self.stocks[
             self.stocks["Name"].str.contains(keyword, case=False, na=False)
         ]
 
         return result[:limit]
 
-    def get_stock(self, symbol):
+    def get_stock(self, symbol: str):
         return self.stocks[self.stocks["Symbol"] == symbol]
 
-
-def get_stock_symbol_service(
-        request: Request,
-) -> StockSymbolService:
-    return request.app.state.stock_symbol_service
+    def get_stock_by_stock_id(self, stock_id: int):
+        return self.stocks[self.stocks["StockId"] == stock_id]

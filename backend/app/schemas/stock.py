@@ -16,6 +16,7 @@ class Stock(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     market: Mapped[str] = mapped_column(String(50), nullable=False)
     sector: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    industry: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     is_domestic: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     currency: Mapped[str] = mapped_column(String(10), default="KRW", nullable=False)
 

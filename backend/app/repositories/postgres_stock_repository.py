@@ -30,12 +30,28 @@ class StockRepository:
         with self.session_factory() as db:
             return db.scalars(stmt).all()
 
+    def find_all_by_stock_ids(self, stock_ids: list[int]) -> list[Stock]:
+        stmt = (
+            select(Stock)
+            .where(Stock.id.in_(stock_ids))
+        )
+        with self.session_factory() as db:
+            return db.scalars(stmt, stock_ids).all()
+
     def find_by_symbol(self, symbol: str) -> Optional[Stock]:
         with self.session_factory() as db:
             stmt = (
                 select(Stock)
                 .where(Stock.symbol == symbol)
             )
+            return db.scalars(stmt).one()
+
+    def find(self, stock_id: int) -> Optional[Stock]:
+        stmt = (
+            select(Stock)
+            .where(Stock.id == stock_id)
+        )
+        with self.session_factory() as db:
             return db.scalars(stmt).one()
 
     def delete(self, stock: Stock, hard_delete: bool | None = False):

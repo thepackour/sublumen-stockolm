@@ -1,13 +1,13 @@
 from langchain.tools import tool
 from app.clients.fdr_client import StockSymbolService
-from app.services.stock_query_service import StockService
+from app.services.stock_query_service import StockQueryService
 
 
 class StockTool:
 
     def __init__(
             self,
-            stock_service: StockService,
+            stock_service: StockQueryService,
             stock_symbol_service: StockSymbolService,
     ):
         self.stock_service = stock_service

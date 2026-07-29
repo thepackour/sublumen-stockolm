@@ -1,14 +1,13 @@
-from fastapi import Depends
-
 from app.container import container
 from app.repositories.postgres_stock_repository import StockRepository
 import FinanceDataReader as fdr
 from datetime import datetime
 
 from app.clients.fdr_client import StockSymbolService
+from app.schemas import Stock
 
 
-class StockService:
+class StockQueryService:
 
     def __init__(
             self,
@@ -59,9 +58,11 @@ class StockService:
             "change": round(change, 2),
         }
 
+    def search_stock(self, query: str, limit: int = 10):
+        stocks = self.stock_symbol_service.search_stock(query, limit)
+        stock_ids = [stock["StockId"] for stock in stocks]
+        return self.stock_repository.find_all_by_stock_ids(stock_ids)
 
-def get_stock_service():
-    return StockService(
-        container.stock_repository,
-        container.stock_symbol_service,
-    )
+    def get_stock(self, symbol: str) -> Stock:
+        stock = self.stock_symbol_service.get_stock(symbol)
+        return self.stock_repository.find(stock["StockId"])

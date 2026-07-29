@@ -1,10 +1,6 @@
-from fastapi import Depends
-
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.schemas.news import News
-from app.core.database import get_db
 
 
 class NewsRepository:

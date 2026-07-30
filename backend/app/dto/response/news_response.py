@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -7,7 +9,7 @@ class NewsResponse(BaseModel):
     summary: str
     source: str
     url: str
-    published_at: str
+    published_at: datetime
 
-    related_stock_id: str
+    related_stock_id: int
     related_stock_name: str

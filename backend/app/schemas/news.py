@@ -21,5 +21,8 @@ class News(Base, TimestampMixin):
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    stock: Mapped[Optional["Stock"]] = relationship("Stock", back_populates="news_items")
-    embeddings: Mapped[Optional["NewsEmbeddings"]] = relationship("NewsEmbeddings", back_populates="news")
+    stock: Mapped[Optional["Stock"]] = relationship(back_populates="news_items")
+    embeddings: Mapped[Optional["NewsEmbedding"]] = relationship(
+        "NewsEmbedding",
+        back_populates="news"
+    )

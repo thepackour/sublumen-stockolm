@@ -1,2 +1,2 @@
-from .stock_tools import stock_price
-from .stock_tools import stock_history
+from .stock_tools import StockTool
+from .news_tools import NewsTool

@@ -107,3 +107,49 @@ class NewsClient:
         )
 
         return data["items"]
+
+    def get_news_by_keyword(
+        self,
+        keyword: str,
+        size: int = 10
+    ) -> list:
+        if size > 10: size = 10
+
+        response = requests.get(
+            "https://openapi.naver.com/v1/search/news.json",
+            params={
+                "query": keyword,
+                "display": size,
+                "sort": Sort.DATE.value,
+            },
+            headers={
+                "X-Naver-Client-Id": settings.NAVER_CLIENT_ID,
+                "X-Naver-Client-Secret": settings.NAVER_CLIENT_SECRET,
+            },
+        )
+
+        data = response.json()
+
+        if response.status_code >= 500:
+            logger.error(
+                "뉴스 조회 API (%s): %s",
+                response.status_code,
+                data.get("errorMessage"),
+            )
+            raise ProjectException(ErrorCode.NEWS500_1)
+
+        if response.status_code >= 400:
+            logger.warning(
+                "뉴스 조회 API (%s): %s",
+                response.status_code,
+                data.get("errorMessage"),
+            )
+            raise ProjectException(ErrorCode.NEWS400_1)
+
+        logger.info(
+            "뉴스 조회 API (%s): %d개 조회",
+            response.status_code,
+            len(data["items"]),
+        )
+
+        return data["items"]

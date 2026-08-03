@@ -2,34 +2,22 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from app.clients.fdr_client import StockSymbolService
-from app.core.database import SessionLocal
-from app.services.stock_service import StockService
-from app.repositories.postgres_stock_repository import StockRepository
-from app.ai.tools.stock_tools import StockTool
-
-
-load_dotenv()
+from app.container import container
+from app.core.config import settings
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash-lite",
     temperature=0.7,
     max_tokens=None,
     timeout=None,
-    max_retries=2
+    max_retries=2,
+    google_api_key=settings.GEMINI_API_KEY
 )
 
-stock_repository = StockRepository(SessionLocal)
-stock_symbol_service = StockSymbolService()
-stock_symbol_service.initialize()
-stock_service = StockService(stock_repository, stock_symbol_service)
+stock_tool = container.stock_tool
+news_tool = container.news_tool
 
-stock_tool = StockTool(stock_service, stock_symbol_service)
-
-tools = [
-    stock_tool.stock_price,
-    stock_tool.stock_history
-]
+tools = stock_tool.get_tools() + news_tool.get_tools()
 
 system_prompt = """
 너는 주식 투자 도우미이다.

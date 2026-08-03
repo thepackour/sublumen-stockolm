@@ -24,9 +24,9 @@ class NewsEmbeddingService:
             NewsEmbedding(
                 news_id=news.id,
                 stock_id=news.stock_id,
-                chunk_idx=i,
+                chunk_index=i,
                 chunk_text=chunks[i],
-                embeddings=embeddings[i].values,
+                embedding=embeddings[i].values,
                 published_at=news.published_at,
             )
             for i in range(len(embeddings))

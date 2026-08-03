@@ -1,3 +1,5 @@
+from app.ai.tools import StockTool
+from app.ai.tools.news_tools import NewsTool
 from app.clients.fdr_client import StockSymbolService
 from app.clients.gemini_embedding import EmbeddingClient
 from app.clients.news_client import NewsClient
@@ -10,6 +12,7 @@ from app.services.news_collect_service import NewsCollectService
 from app.services.news_embedding_service import NewsEmbeddingService
 from app.services.news_query_service import NewsQueryService
 from app.services.stock_collect_service import StockCollectService
+from app.services.stock_query_service import StockQueryService
 
 
 class Container:
@@ -35,6 +38,10 @@ class Container:
             self.stock_repository,
             self.stock_symbol_service,
         )
+        self.stock_query_service = StockQueryService(
+            self.stock_repository,
+            self.stock_symbol_service,
+        )
         self.news_query_service = NewsQueryService(
             self.news_repository,
             self.news_embedding_repository,
@@ -51,10 +58,20 @@ class Container:
             self.news_embedding_service
         )
 
+        # tools
+        self.stock_tool = StockTool(
+            self.stock_query_service,
+            self.stock_symbol_service,
+        )
+        self.news_tool = NewsTool(
+            self.news_query_service,
+            self.news_collect_service,
+        )
+
 
     def initialize(self):
         self.stock_collect_service.initialize()
-        self.news_keyword_repository.initialize()
+        # self.news_keyword_repository.initialize()
 
     def shutdown(self):
         pass

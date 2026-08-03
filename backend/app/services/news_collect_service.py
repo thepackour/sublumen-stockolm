@@ -3,12 +3,10 @@ from email.utils import parsedate_to_datetime
 
 from app.clients.fdr_client import StockSymbolService
 from app.clients.news_client import NewsClient
-from app.container import container
 from app.repositories.news_keyword_repository import NewsKeywordRepository
 from app.repositories.postgres_news_embedding_repository import NewsEmbeddingRepository
 from app.repositories.postgres_news_repository import NewsRepository
 from app.repositories.postgres_stock_repository import StockRepository
-from app.schemas import News
 from app.services.news_embedding_service import NewsEmbeddingService
 
 
@@ -31,23 +29,33 @@ class NewsCollectService:
         self.stock_symbol_service = stock_symbol_service
         self.news_embedding_service = news_embedding_service
 
+        self.last_collected_at: datetime = datetime.now()
+
     def collect_news(self) -> dict:
         targets = self.news_keyword_repository.find_collect_targets(datetime.now())
         news = []
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
+
             symbol = self.stock_symbol_service.find_symbol(target.keyword)
+
             stock_id = None
             if symbol is not None:
-                stock_id = self.stock_repository.find_by_symbol(symbol).id  # 여기 쿼리 여러번 호출 안하도록 보완해야 함
+                stock = self.stock_repository.find_by_symbol(symbol)
+                if stock:
+                    stock_id = stock.id
+
             for item in data:
-                news.append(News(
-                    stock_id=stock_id,
-                    title=item["title"],
-                    content=item["description"],  # 크롤러 도입하면 원문으로 대체
-                    url=item["originallink"],
-                    published_at=parsedate_to_datetime(item["pubDate"]),
-                ))
+                news.append(
+                    {
+                        "stock_id": stock_id,
+                        "title": item["title"],
+                        "content": item["description"], # 크롤러 도입하면 바꿀 예정
+                        "summary": item["description"],
+                        "url": item["originallink"],
+                        "published_at": parsedate_to_datetime(item["pubDate"]),
+                    }
+                )
         saved_news = self.news_repository.save_all(news)
         embeddings = []
         for n in saved_news: embeddings.extend(self.news_embedding_service.embed_news(n))
@@ -55,14 +63,31 @@ class NewsCollectService:
 
         return {"news_count": len(saved_news), "embeddings_count": len(embeddings)}
 
+    def collect_latest_news_for_agent(
+            self,
+            keyword: str,
+            limit
+    ) -> str:
+        news_list = self.news_client.get_news_by_keyword(keyword, limit)
 
-def get_news_collect_service():
-    return NewsCollectService(
-        container.news_repository,
-        container.news_embedding_repository,
-        container.news_keyword_repository,
-        container.stock_repository,
-        container.news_client,
-        container.stock_symbol_service,
-        container.news_embedding_service,
-    )
+        contexts = []
+        for news in news_list:
+            contexts.append(
+                f"""
+                [뉴스]
+    
+                제목:
+                {news["title"]}
+    
+                요약:
+                {news["description"]}
+    
+                발행일:
+                {news["pubDate"]}
+    
+                URL:
+                {news["originallink"]}
+                """
+            )
+
+        return "\n\n".join(contexts)

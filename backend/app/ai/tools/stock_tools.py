@@ -1,4 +1,5 @@
-from langchain.tools import tool
+from langchain_core.tools import StructuredTool
+
 from app.clients.fdr_client import StockSymbolService
 from app.services.stock_query_service import StockQueryService
 
@@ -13,9 +14,7 @@ class StockTool:
         self.stock_service = stock_service
         self.stock_symbol_service = stock_symbol_service
 
-
-    @tool
-    def stock_price(self, stock_name: str) -> dict:
+    def get_stock_price(self, stock_name: str) -> dict:
         """
         주식 현재가를 조회한다.
 
@@ -34,8 +33,7 @@ class StockTool:
 
         return result
 
-    @tool
-    def stock_history(
+    def get_stock_history(
         self,
         stock_name: str,
         start_date: str | None = None,
@@ -56,3 +54,27 @@ class StockTool:
         if symbol is None: return {"error": f"No data found for '{stock_name}'"}
 
         return self.stock_service.get_stock_history(symbol, start_date, end_date)
+
+    def get_tools(self):
+        return [
+            StructuredTool.from_function(
+                func=self.get_stock_price,
+                name="stock_price",
+                description="""\
+                주식 현재가를 조회한다.
+                
+                Args:
+                stock_name: 종목 이름"""
+            ),
+            StructuredTool.from_function(
+                func=self.get_stock_history,
+                name="stock_history",
+                description="""\
+                과거 주식 가격을 조회한다.
+                
+                Args:
+                stock_name: 종목 이름
+                start_date: YYYY-MM-DD (optional)
+                end_date: YYYY-MM-DD (optional)"""
+            )
+        ]

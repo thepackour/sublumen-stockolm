@@ -4,11 +4,10 @@ from datetime import datetime
 from typing import Optional
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.schemas.database import Base, TimestampMixin
-from app.schemas.news import News
 
 
 class NewsEmbedding(Base, TimestampMixin):
@@ -54,5 +53,6 @@ class NewsEmbedding(Base, TimestampMixin):
     )
 
     news: Mapped["News"] = relationship(
+        "News",
         back_populates="embeddings"
     )

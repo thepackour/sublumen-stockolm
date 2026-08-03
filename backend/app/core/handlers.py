@@ -13,11 +13,11 @@ def register_exception_handlers(app: FastAPI):
         exc: ProjectException
     ):
         return JSONResponse(
-            status_code=exc.status_code,
+            status_code=exc.code,
             content={
                 "code": exc.code,
                 "message": exc.message,
-                "data": exc.data
+                # "data": exc.data
             }
         )
     

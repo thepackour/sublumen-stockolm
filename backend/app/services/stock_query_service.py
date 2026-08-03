@@ -1,4 +1,3 @@
-from app.container import container
 from app.repositories.postgres_stock_repository import StockRepository
 import FinanceDataReader as fdr
 from datetime import datetime
@@ -14,8 +13,8 @@ class StockQueryService:
             stock_repository: StockRepository,
             stock_symbol_service: StockSymbolService,
     ):
-        self.stock_symbol_service = stock_symbol_service
         self.stock_repository = stock_repository
+        self.stock_symbol_service = stock_symbol_service
 
     def get_stock_history(self, symbol, start_date = None, end_date = None):
 

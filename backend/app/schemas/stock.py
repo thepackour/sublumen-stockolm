@@ -18,7 +18,7 @@ class Stock(Base, TimestampMixin):
     sector: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     industry: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     is_domestic: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    currency: Mapped[str] = mapped_column(String(10), nullable=False)
+    currency: Mapped[str] = mapped_column(String(10), nullable=True)
 
     financial_statements: Mapped[list["FinancialStatement"]] = relationship(
         "FinancialStatement", back_populates="stock", cascade="all, delete-orphan"

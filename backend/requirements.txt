@@ -7,6 +7,7 @@ langgraph
 langchain
 langchain-core
 langchain-google-genai
+langchain-text-splitters
 sqlalchemy
 pgvector
 psycopg2-binary

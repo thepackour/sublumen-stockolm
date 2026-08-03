@@ -20,17 +20,19 @@ class NewsRepository:
             db.refresh(news)
             return news
 
-    def save_all(self, news: list[News]) -> list[News]:
+    def save_all(self, news: list[dict]) -> list[News]:
         with self.session_factory() as db:
             stmt = (insert(News)
             .values(news)
             .on_conflict_do_nothing(
                 index_elements=["url"]
-            ))
+            )
+            .returning(News))
 
-            result = db.execute(stmt).fetchall()
+            result = db.execute(stmt)
             db.commit()
-            return result
+
+            return result.scalars().all()
 
     def find_by_url(self, url: str):
         with self.session_factory() as db:
@@ -57,7 +59,7 @@ class NewsRepository:
     def find_all_by_ids(
             self,
             id_list: list[int],
-    ):
+    ) -> list[News]:
         with self.session_factory() as db:
             stmt = (
                 select(News)

@@ -8,11 +8,14 @@ router = APIRouter(
     tags=["Stock"]
 )
 
+def get_stock_query_service():
+    return container.stock_query_service
+
 @router.get("")
 def search_stock(
     query: str | None = Query(default=None),
     limit: int = 10,
-    service: StockQueryService = Depends(StockQueryService),
+    service: StockQueryService = Depends(get_stock_query_service),
 ):
     return service.search_stock(query, limit)
 
@@ -20,10 +23,6 @@ def search_stock(
 @router.get("/{symbol}")
 def get_stock(
         symbol: str,
-        service: StockQueryService = Depends(StockQueryService),
+        service: StockQueryService = Depends(get_stock_query_service),
 ):
     return service.get_stock(symbol)
-
-
-def get_stock_query_service() -> StockQueryService:
-    return container.stock_query_service

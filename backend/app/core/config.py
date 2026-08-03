@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+if os.getenv("ENV") != "docker":
+    load_dotenv("dev.env")
 
 
 class Settings:

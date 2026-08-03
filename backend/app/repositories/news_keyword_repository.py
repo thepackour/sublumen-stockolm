@@ -119,7 +119,7 @@ class NewsKeywordRepository:
             now: datetime,
             limit: int = 100
     ) -> list[NewsKeyword]:
-        with self.session_factory as db:
+        with self.session_factory() as db:
             stmt = (
                 select(NewsKeyword)
                 .where(
@@ -138,7 +138,7 @@ class NewsKeywordRepository:
             keyword_id: int,
             next_collect_at: datetime
     ) -> None:
-        with self.session_factory as db:
+        with self.session_factory() as db:
             stmt = (
                 update(NewsKeyword)
                 .where(
@@ -152,7 +152,7 @@ class NewsKeywordRepository:
             db.commit()
 
     def save(self, keyword: NewsKeyword) -> NewsKeyword:
-        with self.session_factory as db:
+        with self.session_factory() as db:
             db.add(keyword)
             db.commit()
             db.refresh(keyword)

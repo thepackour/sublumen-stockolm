@@ -6,7 +6,12 @@ from app.schemas import Stock
 
 market_currency_table = {
     "KRX": "KRW",
-    "NASDAQ": "USD"
+    "KOSDAQ": "KRW",
+    "KOSPI": "KRW",
+    "KOSDAQ GLOBAL": "KRW",
+    "KONEX": "KRW",
+    "NASDAQ": "USD",
+    "nan": None
 }
 
 
@@ -22,19 +27,23 @@ class StockCollectService:
 
     def initialize(self):
         self.stock_symbol_service.initialize()
-        stock_list = [
-            Stock(
-                symbol=row.Symbol,
-                name=row.Name,
-                market=row.Market,
-                sector=row.Sector,
-                industry=row.Industry,
-                is_domestic=row.Market in ["KRX"],
-                currency=market_currency_table[row.Market]
-            )
-            for row in self.stock_symbol_service.stocks.itertuples()
-        ]
-        stocks = self.stock_repository.save_all(stock_list)
+        stocks = self.stock_repository.find_all()
+        if len(stocks) == 0:
+            stock_list = [
+                Stock(
+                    symbol=row.Symbol,
+                    name=row.Name,
+                    market=row.Market,
+                    sector= None if pd.isna(row.Sector) else row.Sector,
+                    industry= None if pd.isna(row.Industry) else row.Industry,
+                    is_domestic=row.Market in ["KRX"],
+                    currency= None if pd.isna(row.Market) else market_currency_table.get(row.Market)
+                )
+                for row in self.stock_symbol_service.stocks.itertuples(index=False)
+                if not pd.isna(row.Market)
+            ]
+            stocks = self.stock_repository.save_all(stock_list)
+
         df = pd.DataFrame([
             {
                 "StockId": stock.id,

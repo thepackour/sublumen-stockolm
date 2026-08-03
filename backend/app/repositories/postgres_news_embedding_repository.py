@@ -1,19 +1,17 @@
-from fastapi import Depends
 from sqlalchemy import select, delete, func
-from sqlalchemy.orm import Session
 
 from app.schemas.news_embedding import NewsEmbedding
-from app.core.database import get_db
 
 
 class NewsEmbeddingRepository:
 
-    def __init__(self, db: Session):
-        self.db = db
+    def __init__(self, session_factory):
+        self.session_factory = session_factory
 
     def save_all(self, embeddings: list[NewsEmbedding]) -> None:
-        self.db.add_all(embeddings)
-        self.db.commit()
+        with self.session_factory() as db:
+            db.add_all(embeddings)
+            db.commit()
 
     def similarity_search(
         self,
@@ -28,7 +26,8 @@ class NewsEmbeddingRepository:
             .limit(limit)
         )
 
-        return list(self.db.scalars(stmt))
+        with self.session_factory() as db:
+            return list(db.scalars(stmt))
 
     def search_news_id_by_embedding(
             self,
@@ -38,48 +37,43 @@ class NewsEmbeddingRepository:
     ) -> tuple[list[tuple[int, float]], int]:
         distance = NewsEmbedding.embedding.cosine_distance(query_embedding)
 
-        # 데이터 조회
-        stmt = (
-            select(
-                NewsEmbedding.news_id,
-                func.min(distance).label("score"),
-            )
-            .group_by(NewsEmbedding.news_id)
-            .order_by("score")
-            .offset((page - 1) * limit)
-            .limit(limit)
-        )
-
-        items = self.db.execute(stmt).all()
-
-        # 전체 개수 조회
-        count_stmt = (
-            select(func.count())
-            .select_from(
-                select(NewsEmbedding.news_id)
+        with self.session_factory() as db:
+            # 데이터 조회
+            stmt = (
+                select(
+                    NewsEmbedding.news_id,
+                    func.min(distance).label("score"),
+                )
                 .group_by(NewsEmbedding.news_id)
-                .subquery()
+                .order_by("score")
+                .offset((page - 1) * limit)
+                .limit(limit)
             )
-        )
 
-        total_count = self.db.scalar(count_stmt)
+            items = db.execute(stmt).all()
 
-        return items, total_count
+            # 전체 개수 조회
+            count_stmt = (
+                select(func.count())
+                .select_from(
+                    select(NewsEmbedding.news_id)
+                    .group_by(NewsEmbedding.news_id)
+                    .subquery()
+                )
+            )
+
+            total_count = db.scalar(count_stmt)
+
+            return items, total_count
 
     def delete_by_news_id(
             self,
             news_id: int,
     ) -> None:
+        with self.session_factory() as db:
+            db.execute(
+                delete(NewsEmbedding)
+                .where(NewsEmbedding.news_id == news_id)
+            )
 
-        self.db.execute(
-            delete(NewsEmbedding)
-            .where(NewsEmbedding.news_id == news_id)
-        )
-
-        self.db.commit()
-
-
-def get_news_embedding_repository(
-    db: Session = Depends(get_db),
-):
-    return NewsEmbeddingRepository(db)
+            db.commit()

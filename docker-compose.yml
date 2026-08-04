@@ -18,6 +18,8 @@ services:
       - ./backend/.env
     # volumes:
     #   - ./backend:/app
+    environment:
+      ENV: docker
     depends_on:
       postgres:
         condition: service_healthy
@@ -25,19 +27,19 @@ services:
       - stockolm-net
 
   postgres:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     container_name: postgres
     restart: unless-stopped
     environment:
-      ***REMOVED***
-      ***REMOVED***
-      ***REMOVED***
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      ***REMOVED***
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5

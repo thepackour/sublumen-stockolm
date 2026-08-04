@@ -66,7 +66,7 @@ class NewsCollectService:
     def collect_latest_news_for_agent(
             self,
             keyword: str,
-            limit
+            limit = 10
     ) -> str:
         news_list = self.news_client.get_news_by_keyword(keyword, limit)
 

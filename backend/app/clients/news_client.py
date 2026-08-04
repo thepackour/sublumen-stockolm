@@ -66,7 +66,7 @@ class NewsClient:
     def get_news_by_news_keyword(
         self,
         news_keyword: NewsKeyword,
-        size: int = 20
+        size: int = 10
     ) -> list:
 
         response = requests.get(

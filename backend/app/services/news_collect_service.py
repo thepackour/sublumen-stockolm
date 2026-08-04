@@ -1,5 +1,6 @@
 from datetime import datetime
 from email.utils import parsedate_to_datetime
+from warnings import deprecated
 
 from app.clients.fdr_client import StockSymbolService
 from app.clients.news_client import NewsClient
@@ -31,8 +32,41 @@ class NewsCollectService:
 
         self.last_collected_at: datetime = datetime.now()
 
+    @deprecated("collect_news_with_priority()를 사용하세요.")
     def collect_news(self) -> dict:
         targets = self.news_keyword_repository.find_collect_targets(datetime.now())
+        news = []
+        for target in targets:
+            data = self.news_client.get_news_by_news_keyword(target)
+
+            symbol = self.stock_symbol_service.find_symbol(target.keyword)
+
+            stock_id = None
+            if symbol is not None:
+                stock = self.stock_repository.find_by_symbol(symbol)
+                if stock:
+                    stock_id = stock.id
+
+            for item in data:
+                news.append(
+                    {
+                        "stock_id": stock_id,
+                        "title": item["title"],
+                        "content": item["description"], # 크롤러 도입하면 바꿀 예정
+                        "summary": item["description"],
+                        "url": item["originallink"],
+                        "published_at": parsedate_to_datetime(item["pubDate"]),
+                    }
+                )
+        saved_news = self.news_repository.save_all(news)
+        embeddings = []
+        for n in saved_news: embeddings.extend(self.news_embedding_service.embed_news(n))
+        self.news_embedding_repository.save_all(embeddings)
+
+        return {"news_count": len(saved_news), "embeddings_count": len(embeddings)}
+
+    def collect_news_with_priority(self, priority: int) -> dict:
+        targets = self.news_keyword_repository.find_targets_by_priority(priority)
         news = []
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)

@@ -20,24 +20,22 @@ class StockRepository:
 
     def save_all(self, stocks: list[Stock]):
         with self.session_factory() as db:
-            for stock in stocks:
-                try:
-                    db.add(stock)
-                    db.commit()
-                except Exception:
-                    print("ERROR STOCK")
-                    print(stock.symbol)
-                    print(stock.name)
-                    print(stock.market)
-                    print(stock.sector)
-                    print(stock.industry)
-                    raise
-        return stocks
-
-        # with self.session_factory() as db:
-        #     db.add_all(stocks)
-        #     db.commit()
-        #     return stocks
+            db.add_all(stocks)
+            db.flush()
+            db.commit()
+            # for stock in stocks:
+            #     try:
+            #         db.add(stock)
+            #         db.commit()
+            #     except Exception:
+            #         print("ERROR STOCK")
+            #         print(stock.symbol)
+            #         print(stock.name)
+            #         print(stock.market)
+            #         print(stock.sector)
+            #         print(stock.industry)
+            #         raise
+            return stocks
 
     def find_all(self):
         stmt = select(Stock)

@@ -27,7 +27,11 @@ class NewsQueryService:
             size: int = 10
     ) -> PageResponse[NewsResponse]:
         query = self.embedding_client.embed_keyword(keyword)
-        tmp, total = self.news_embedding_repository.search_news_id_by_embedding(query.values, page, size)
+        tmp, total = self.news_embedding_repository.search_news_id_by_embedding(
+            query,
+            page,
+            size
+        )
         news_ids = [item[0] for item in tmp]
         news_list = self.news_repository.find_all_by_ids(news_ids)
         news_map = {
@@ -69,7 +73,7 @@ class NewsQueryService:
         query = self.embedding_client.embed_keyword(keyword)
 
         results, _ = self.news_embedding_repository.search_news_id_by_embedding(
-            query.values,
+            query,
             1,
             limit,
         )

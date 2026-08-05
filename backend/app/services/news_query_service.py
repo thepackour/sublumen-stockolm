@@ -1,5 +1,5 @@
 from app.clients.fdr_client import StockSymbolService
-from app.clients.gemini_embedding import EmbeddingClient
+from app.clients.openai_embedding import EmbeddingClient
 from app.dto.response.news_response import NewsResponse
 from app.dto.response.page_response import PageResponse
 from app.repositories.postgres_news_repository import NewsRepository

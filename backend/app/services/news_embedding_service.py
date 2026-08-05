@@ -1,4 +1,4 @@
-from app.clients.gemini_embedding import EmbeddingClient
+from app.clients.openai_embedding import EmbeddingClient
 from app.schemas import News
 from app.schemas.news_embedding import NewsEmbedding
 from app.util.news_chunker import NewsChunker

@@ -16,9 +16,16 @@ class ChosunCrawler(BaseNewsCrawler):
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
+        selected = soup.select_one(".article-body")
 
-        script = soup.select_one("#fusion-metadata").text
+        if selected is not None:
+            return selected.get_text("\n", strip=True)
 
+        selected = soup.select_one("#fusion-metadata")
+
+        if selected is None: return None
+
+        script = selected.text
         match = re.search(
             r'Fusion\.globalContent=(\{.*?\});',
             script,

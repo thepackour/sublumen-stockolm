@@ -14,6 +14,6 @@ class HankyungCrawler(BaseNewsCrawler):
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        article = soup.select_one("#articletxt").get_text("\n", strip=True)
+        article = soup.select_one(".article-body").get_text("\n", strip=True)
 
         return "\n".join(article.split("\n")[1:-1])

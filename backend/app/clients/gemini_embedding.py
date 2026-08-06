@@ -13,7 +13,7 @@ class EmbeddingClient:
         )
         self.model = self.client.models
 
-    def embed_chunks(self, chunks: list[str]) -> list[list[float]]:
+    def embed_chunks(self, chunks: list[str], show_logs: bool = True) -> list[list[float]]:
         res = self.model.embed_content(
             model="gemini-embedding-2",
             contents=[
@@ -23,13 +23,13 @@ class EmbeddingClient:
                 for c in chunks
             ]
         )
-        logger.info(
+        if show_logs: logger.info(
             "임베딩 API: 청크 %d개 생성",
             len(res.embeddings),
         )
         return [embedding.value for embedding in res.embeddings]
 
-    def embed_keyword(self, keyword: str) -> list[float]:
+    def embed_keyword(self, keyword: str, show_logs: bool = True) -> list[float]:
         res = self.model.embed_content(
             model="gemini-embedding-2",
             contents=[
@@ -38,5 +38,5 @@ class EmbeddingClient:
                 )
             ]
         )
-        logger.info("임베딩 API: 키워드 1개 성공")
+        if show_logs: logger.info("임베딩 API: 키워드 1개 성공")
         return res.embeddings[0].values

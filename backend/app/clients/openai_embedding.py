@@ -11,22 +11,22 @@ class EmbeddingClient:
         self.model = "text-embedding-3-small"
 
 
-    def embed_chunks(self, chunks: list[str]) -> list[list[float]]:
+    def embed_chunks(self, chunks: list[str], show_logs: bool = True) -> list[list[float]]:
         res = self.client.embeddings.create(
             model=self.model,
             input=chunks
         )
-        logger.info(
+        if show_logs: logger.info(
             "임베딩 API: 청크 %d개 생성",
             len(res.data),
         )
         return [item.embedding for item in res.data]
 
 
-    def embed_keyword(self, keyword: str) -> list[float]:
+    def embed_keyword(self, keyword: str, show_logs: bool = True) -> list[float]:
         res = self.client.embeddings.create(
             model=self.model,
             input=keyword
         )
-        logger.info("임베딩 API: 키워드 1개 성공")
+        if show_logs: logger.info("임베딩 API: 키워드 1개 성공")
         return res.data[0].embedding

@@ -19,7 +19,7 @@ class NewsEmbeddingService:
         {news.content}"""
 
         chunks = self.news_chunker.split(text)
-        embeddings = self.embedding_client.embed_chunks(chunks)
+        embeddings = self.embedding_client.embed_chunks(chunks, False)
         return [
             NewsEmbedding(
                 news_id=news.id,

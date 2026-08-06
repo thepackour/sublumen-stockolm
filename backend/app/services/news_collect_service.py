@@ -3,10 +3,12 @@ from email.utils import parsedate_to_datetime
 
 from app.clients.fdr_client import StockSymbolService
 from app.clients.news_client import NewsClient
+from app.core.logger import logger
 from app.repositories.news_keyword_repository import NewsKeywordRepository
 from app.repositories.postgres_news_embedding_repository import NewsEmbeddingRepository
 from app.repositories.postgres_news_repository import NewsRepository
 from app.repositories.postgres_stock_repository import StockRepository
+from app.services.crawlers.crawler_factory import CrawlerFactory
 from app.services.news_embedding_service import NewsEmbeddingService
 
 
@@ -45,13 +47,24 @@ class NewsCollectService:
                 if stock:
                     stock_id = stock.id
 
+            crawlers = CrawlerFactory()
             for item in data:
+                article = None
+                try:
+                    crawler = crawlers.get_crawler(item["originallink"])
+                    article = crawler.get_article(item["originallink"])
+                except AttributeError as e:
+                    logger.error(
+                        "Crawler Error: Cannot parse the article (%s)\n%s",
+                        item["originallink"],
+                        str(e.obj)
+                    )
                 news.append(
                     {
                         "stock_id": stock_id,
                         "title": item["title"],
-                        "content": item["description"], # 크롤러 도입하면 바꿀 예정
-                        "summary": item["description"],
+                        "content": item["description"] if article is None else article,
+                        "summary": item["description"], # 요약하는 기능 구현하면 사용하면 바꿀 예정
                         "url": item["originallink"],
                         "published_at": parsedate_to_datetime(item["pubDate"]),
                     }

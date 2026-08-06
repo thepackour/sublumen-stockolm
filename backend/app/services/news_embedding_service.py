@@ -1,4 +1,4 @@
-from app.clients.gemini_embedding import EmbeddingClient
+from app.clients.openai_embedding import EmbeddingClient
 from app.schemas import News
 from app.schemas.news_embedding import NewsEmbedding
 from app.util.news_chunker import NewsChunker
@@ -19,14 +19,14 @@ class NewsEmbeddingService:
         {news.content}"""
 
         chunks = self.news_chunker.split(text)
-        embeddings = self.embedding_client.embed_chunks(chunks)
+        embeddings = self.embedding_client.embed_chunks(chunks, False)
         return [
             NewsEmbedding(
                 news_id=news.id,
                 stock_id=news.stock_id,
                 chunk_index=i,
                 chunk_text=chunks[i],
-                embedding=embeddings[i].values,
+                embedding=embeddings[i],
                 published_at=news.published_at,
             )
             for i in range(len(embeddings))

@@ -14,3 +14,4 @@ psycopg2-binary
 pytest
 finance-datareader
 bs4
+openai

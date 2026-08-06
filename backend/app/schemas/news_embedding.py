@@ -43,7 +43,7 @@ class NewsEmbedding(Base, TimestampMixin):
     )
 
     embedding: Mapped[list[float]] = mapped_column(
-        Vector(3072),
+        Vector(1536),
         nullable=False
     )
 

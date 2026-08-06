@@ -20,6 +20,7 @@ class News(Base, TimestampMixin):
     url: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    embedding_retries: Mapped[Optional[int]] = mapped_column(Integer, default=0)
 
     stock: Mapped[Optional["Stock"]] = relationship(back_populates="news_items")
     embeddings: Mapped[Optional["NewsEmbedding"]] = relationship(

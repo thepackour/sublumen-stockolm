@@ -7,6 +7,7 @@ if os.getenv("ENV") != "docker":
 
 class Settings:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     DATABASE_URL: str = os.getenv(
         "DB_URL",
         "postgresql+psycopg2://postgres:postgres@localhost:5432/stockolm",

@@ -1,5 +1,7 @@
+import requests
 from bs4 import BeautifulSoup
 
+from app.core.logger import logger
 from app.services.crawlers.base import BaseNewsCrawler
 
 targets = [
@@ -16,12 +18,22 @@ class GeneralCrawler(BaseNewsCrawler):
         return True
 
     def get_article(self, url: str) -> str:
-        response = self.session.get(url, timeout=10)
+        try:
+            response = self.session.get(url, timeout=10)
+        except requests.exceptions.ConnectTimeout:
+            logger.warning(
+                "뉴스 API: ConnectTimeout (%s)",
+                url,
+            )
+            return None
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
 
         for target in targets:
-            return soup.select_one(target).get_text("\n", strip=True)
+            selected = soup.select_one(target)
+            if selected is None: continue
+            article = selected.get_text("\n", strip=True)
+            return article
 
         return None

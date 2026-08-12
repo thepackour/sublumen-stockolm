@@ -20,24 +20,22 @@ class StockRepository:
 
     def save_all(self, stocks: list[Stock]):
         with self.session_factory() as db:
-            for stock in stocks:
-                try:
-                    db.add(stock)
-                    db.commit()
-                except Exception:
-                    print("ERROR STOCK")
-                    print(stock.symbol)
-                    print(stock.name)
-                    print(stock.market)
-                    print(stock.sector)
-                    print(stock.industry)
-                    raise
-        return stocks
-
-        # with self.session_factory() as db:
-        #     db.add_all(stocks)
-        #     db.commit()
-        #     return stocks
+            db.add_all(stocks)
+            db.flush()
+            db.commit()
+            # for stock in stocks:
+            #     try:
+            #         db.add(stock)
+            #         db.commit()
+            #     except Exception:
+            #         print("ERROR STOCK")
+            #         print(stock.symbol)
+            #         print(stock.name)
+            #         print(stock.market)
+            #         print(stock.sector)
+            #         print(stock.industry)
+            #         raise
+            return stocks
 
     def find_all(self):
         stmt = select(Stock)
@@ -59,6 +57,23 @@ class StockRepository:
                 .where(Stock.symbol == symbol)
             )
             return db.scalars(stmt).one()
+
+    def search_stocks_by_keyword(
+            self,
+            keyword: str,
+            limit: int | None = None,
+    ) -> list[Stock]:
+        stmt = (
+            select(Stock)
+            .where(
+                Stock.name.ilike(f"%{keyword}%")
+            )
+        )
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        return list(self.session_factory().scalars(stmt).all())
 
     def find(self, stock_id: int) -> Optional[Stock]:
         stmt = (

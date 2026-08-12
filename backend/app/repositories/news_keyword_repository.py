@@ -117,7 +117,7 @@ class NewsKeywordRepository:
     def find_collect_targets(
             self,
             now: datetime,
-            limit: int = 100
+            limit: int = 10
     ) -> list[NewsKeyword]:
         with self.session_factory() as db:
             stmt = (

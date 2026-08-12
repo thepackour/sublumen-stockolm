@@ -1,3 +1,4 @@
+pydantic
 fastapi
 uvicorn
 python-dotenv
@@ -13,4 +14,4 @@ pgvector
 psycopg2-binary
 pytest
 finance-datareader
-apscheduler
+bs4

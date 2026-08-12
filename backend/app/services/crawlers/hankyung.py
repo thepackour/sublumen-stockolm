@@ -1,0 +1,19 @@
+from bs4 import BeautifulSoup
+
+from app.services.crawlers.base import BaseNewsCrawler
+
+
+class HankyungCrawler(BaseNewsCrawler):
+
+    def check_url(self, url: str) -> bool:
+        return "hankyung.com" in url
+
+    def get_article(self, url: str) -> str:
+        response = self.session.get(url, timeout=10)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        article = soup.select_one(".article-body").get_text("\n", strip=True)
+
+        return "\n".join(article.split("\n")[1:-1])

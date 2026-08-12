@@ -2,12 +2,14 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 from warnings import deprecated
 
-from app.clients.fdr_client import StockSymbolService
+from app.services.stock_search_service import StockSearchService
 from app.clients.news_client import NewsClient
+from app.core.logger import logger
 from app.repositories.news_keyword_repository import NewsKeywordRepository
 from app.repositories.postgres_news_embedding_repository import NewsEmbeddingRepository
 from app.repositories.postgres_news_repository import NewsRepository
 from app.repositories.postgres_stock_repository import StockRepository
+from app.services.crawlers.crawler_factory import CrawlerFactory
 from app.services.news_embedding_service import NewsEmbeddingService
 
 
@@ -19,7 +21,7 @@ class NewsCollectService:
             news_keyword_repository: NewsKeywordRepository,
             stock_repository: StockRepository,
             news_client: NewsClient,
-            stock_symbol_service: StockSymbolService,
+            stock_search_service: StockSearchService,
             news_embedding_service: NewsEmbeddingService,
     ):
         self.news_repository = news_repository
@@ -27,7 +29,7 @@ class NewsCollectService:
         self.news_keyword_repository = news_keyword_repository
         self.stock_repository = stock_repository
         self.news_client = news_client
-        self.stock_symbol_service = stock_symbol_service
+        self.stock_search_service = stock_search_service
         self.news_embedding_service = news_embedding_service
 
         self.last_collected_at: datetime = datetime.now()
@@ -39,21 +41,31 @@ class NewsCollectService:
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            symbol = self.stock_symbol_service.find_symbol(target.keyword)
+            stock = self.stock_repository.search_stocks_by_keyword(target.keyword)[0]
+            if not stock:
+                logger.info(
+                    "search_stocks_by_keyword: No related stocks with the keyword (%s)\n",
+                    target
+                )
 
-            stock_id = None
-            if symbol is not None:
-                stock = self.stock_repository.find_by_symbol(symbol)
-                if stock:
-                    stock_id = stock.id
-
+            crawlers = CrawlerFactory()
             for item in data:
+                article = None
+                try:
+                    crawler = crawlers.get_crawler(item["originallink"])
+                    article = crawler.get_article(item["originallink"])
+                except AttributeError as e:
+                    logger.error(
+                        "Crawler Error: Cannot parse the article (%s)\n%s",
+                        item["originallink"],
+                        str(e.obj)
+                    )
                 news.append(
                     {
-                        "stock_id": stock_id,
+                        "stock_id": None if stock is None else stock.id,
                         "title": item["title"],
-                        "content": item["description"], # 크롤러 도입하면 바꿀 예정
-                        "summary": item["description"],
+                        "content": item["description"] if article is None else article,
+                        "summary": item["description"], # 요약하는 기능 구현하면 사용하면 바꿀 예정
                         "url": item["originallink"],
                         "published_at": parsedate_to_datetime(item["pubDate"]),
                     }
@@ -100,7 +112,7 @@ class NewsCollectService:
     def collect_latest_news_for_agent(
             self,
             keyword: str,
-            limit
+            limit = 10
     ) -> str:
         news_list = self.news_client.get_news_by_keyword(keyword, limit)
 

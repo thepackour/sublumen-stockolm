@@ -83,7 +83,7 @@ class NewsCollectService:
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            symbol = self.stock_symbol_service.find_symbol(target.keyword)
+            symbol = self.stock_search_service.find_symbol(target.keyword)
 
             stock_id = None
             if symbol is not None:

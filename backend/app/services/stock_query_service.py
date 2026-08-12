@@ -1,8 +1,8 @@
+from app.clients.fdr_client import FdrClient
 from app.repositories.postgres_stock_repository import StockRepository
-import FinanceDataReader as fdr
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from app.clients.fdr_client import StockSymbolService
+from app.services.stock_search_service import StockSearchService
 from app.schemas import Stock
 
 
@@ -11,10 +11,12 @@ class StockQueryService:
     def __init__(
             self,
             stock_repository: StockRepository,
-            stock_symbol_service: StockSymbolService,
+            stock_search_service: StockSearchService,
+            fdr_client: FdrClient,
     ):
         self.stock_repository = stock_repository
-        self.stock_symbol_service = stock_symbol_service
+        self.stock_search_service = stock_search_service
+        self.fdr_client = fdr_client
 
     def get_stock_history(self, symbol, start_date = None, end_date = None):
 
@@ -22,8 +24,8 @@ class StockQueryService:
             now = datetime.now()
             start_date = now.replace(year=now.year - 1).strftime("%Y-%m-%d")
 
-        if end_date is None: df = fdr.DataReader(symbol, start_date)
-        else: df = fdr.DataReader(symbol, start_date, end_date)
+        if end_date is None: df = self.fdr_client.get_stock_price(symbol, start_date)
+        else: df = self.fdr_client.get_stock_price(symbol, start_date, end_date)
         
         if df.empty:
             return []
@@ -34,9 +36,16 @@ class StockQueryService:
             .to_dict(orient="records")
         )
 
-    def get_stock_price(self, symbol: str) -> dict:
+    def get_stock_price_for_agent(self, symbol: str) -> dict:
 
-        df = fdr.DataReader(symbol)
+        today = datetime.now()
+        yesterday = today - timedelta(days=1)
+
+        df = self.fdr_client.get_stock_price(
+            symbol,
+            yesterday.strftime("%Y-%m-%d"),
+            today.strftime("%Y-%m-%d")
+        )
 
         latest = df.iloc[-1]
 
@@ -58,10 +67,7 @@ class StockQueryService:
         }
 
     def search_stock(self, query: str, limit: int = 10):
-        stocks = self.stock_symbol_service.search_stock(query, limit)
-        stock_ids = [stock["StockId"] for stock in stocks]
-        return self.stock_repository.find_all_by_stock_ids(stock_ids)
+        return self.stock_repository.search_stocks_by_keyword(query, limit)
 
     def get_stock(self, symbol: str) -> Stock:
-        stock = self.stock_symbol_service.get_stock(symbol)
-        return self.stock_repository.find(stock["StockId"])
+        return self.stock_repository.find_by_symbol(symbol)

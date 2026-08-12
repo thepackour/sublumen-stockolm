@@ -1,6 +1,6 @@
 from langchain_core.tools import StructuredTool
 
-from app.clients.fdr_client import StockSymbolService
+from app.services.stock_search_service import StockSearchService
 from app.services.stock_query_service import StockQueryService
 
 
@@ -8,11 +8,11 @@ class StockTool:
 
     def __init__(
             self,
-            stock_service: StockQueryService,
-            stock_symbol_service: StockSymbolService,
+            stock_query_service: StockQueryService,
+            stock_search_service: StockSearchService,
     ):
-        self.stock_service = stock_service
-        self.stock_symbol_service = stock_symbol_service
+        self.stock_query_service = stock_query_service
+        self.stock_search_service = stock_search_service
 
     def get_stock_price(self, stock_name: str) -> dict:
         """
@@ -24,14 +24,10 @@ class StockTool:
 
         print("stock_price is used.")
 
-        symbol = self.stock_symbol_service.find_symbol(stock_name)
+        symbol = self.stock_search_service.find_symbol(stock_name)
+        if symbol is None: return {"error": f"No data found for '{stock_name}'"}
 
-        if symbol is None:
-            return {"error": f"No data found for '{stock_name}'"}
-
-        result = self.stock_service.get_stock_price(symbol)
-
-        return result
+        return self.stock_query_service.get_stock_price_for_agent(symbol)
 
     def get_stock_history(
         self,
@@ -50,10 +46,10 @@ class StockTool:
 
         print("stock_history is used.")
 
-        symbol = self.stock_symbol_service.find_symbol(stock_name)
+        symbol = self.stock_search_service.find_symbol(stock_name)
         if symbol is None: return {"error": f"No data found for '{stock_name}'"}
 
-        return self.stock_service.get_stock_history(symbol, start_date, end_date)
+        return self.stock_query_service.get_stock_history(symbol, start_date, end_date)
 
     def get_tools(self):
         return [

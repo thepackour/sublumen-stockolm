@@ -58,6 +58,23 @@ class StockRepository:
             )
             return db.scalars(stmt).one()
 
+    def search_stocks_by_keyword(
+            self,
+            keyword: str,
+            limit: int | None = None,
+    ) -> list[Stock]:
+        stmt = (
+            select(Stock)
+            .where(
+                Stock.name.ilike(f"%{keyword}%")
+            )
+        )
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        return list(self.session_factory().scalars(stmt).all())
+
     def find(self, stock_id: int) -> Optional[Stock]:
         stmt = (
             select(Stock)

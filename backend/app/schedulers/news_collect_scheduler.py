@@ -1,9 +1,6 @@
-from fastapi import FastAPI
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.container import container
-
-app = FastAPI()
 
 scheduler = BackgroundScheduler()
 
@@ -54,7 +51,7 @@ def register_jobs():
 
     scheduler.add_job(
         collect_news_job,
-        'cron',
+        'interval',
         hour='48',
         args=[[1, 2]],
         id='news_collect_1_2',

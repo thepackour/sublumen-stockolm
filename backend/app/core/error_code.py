@@ -16,6 +16,8 @@ class ErrorCode(Enum):
 
     BACKTEST404_1 = (404, "BACKTEST404_1", "백테스트 결과를 찾을 수 없습니다.")
 
+    FS400_1 = (400, "FS400_1", "end_year와 end_quarter는 함께 지정해야 합니다.")
+
     GENERAL400_1 = (400, "GENERAL400_1", "잘못된 요청입니다.")
     GENERAL401_1 = (401, "GENERAL401_1", "인증되지 않은 요청입니다.")
     GENERAL403_1 = (403, "GENERAL403_1", "권한이 없는 요청입니다.")

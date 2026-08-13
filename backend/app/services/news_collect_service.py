@@ -2,13 +2,11 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 from warnings import deprecated
 
-from app.services.stock_search_service import StockSearchService
 from app.clients.news_client import NewsClient
 from app.core.logger import logger
 from app.repositories.news_keyword_repository import NewsKeywordRepository
 from app.repositories.postgres_news_embedding_repository import NewsEmbeddingRepository
 from app.repositories.postgres_news_repository import NewsRepository
-from app.repositories.postgres_stock_repository import StockRepository
 from app.services.crawlers.crawler_factory import CrawlerFactory
 from app.services.news_embedding_service import NewsEmbeddingService
 
@@ -19,17 +17,13 @@ class NewsCollectService:
             news_repository: NewsRepository,
             news_embedding_repository: NewsEmbeddingRepository,
             news_keyword_repository: NewsKeywordRepository,
-            stock_repository: StockRepository,
             news_client: NewsClient,
-            stock_search_service: StockSearchService,
             news_embedding_service: NewsEmbeddingService,
     ):
         self.news_repository = news_repository
         self.news_embedding_repository = news_embedding_repository
         self.news_keyword_repository = news_keyword_repository
-        self.stock_repository = stock_repository
         self.news_client = news_client
-        self.stock_search_service = stock_search_service
         self.news_embedding_service = news_embedding_service
 
         self.last_collected_at: datetime = datetime.now()
@@ -41,10 +35,14 @@ class NewsCollectService:
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            stock = self.stock_repository.search_stocks_by_keyword(target.keyword)[0]
+            # 한국투자증권 API에 맞춰서 바꿔야 함!!!
+            stock = {
+                "ticker": "123456",
+                "name": "ㅇㅇ주식회사"
+            }
             if not stock:
                 logger.info(
-                    "search_stocks_by_keyword: No related stocks with the keyword (%s)\n",
+                    "collect_news: No related stocks with the keyword (%s)\n",
                     target
                 )
 
@@ -62,12 +60,13 @@ class NewsCollectService:
                     )
                 news.append(
                     {
-                        "stock_id": None if stock is None else stock.id,
                         "title": item["title"],
                         "content": item["description"] if article is None else article,
                         "summary": item["description"], # 요약하는 기능 구현하면 사용하면 바꿀 예정
                         "url": item["originallink"],
                         "published_at": parsedate_to_datetime(item["pubDate"]),
+                        "stock_ticker": None if stock is None else stock["ticker"],
+                        "stock_name": None if stock is None else stock["name"]
                     }
                 )
         saved_news = self.news_repository.save_all(news)
@@ -83,23 +82,27 @@ class NewsCollectService:
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            symbol = self.stock_search_service.find_symbol(target.keyword)
-
-            stock_id = None
-            if symbol is not None:
-                stock = self.stock_repository.find_by_symbol(symbol)
-                if stock:
-                    stock_id = stock.id
+            # 한국투자증권 API에 맞춰서 바꿔야 함!!!
+            stock = {
+                "ticker": "123456",
+                "name": "ㅇㅇ주식회사"
+            }
+            if not stock:
+                logger.info(
+                    "collect_news_with_priority: No related stocks with the keyword (%s)\n",
+                    target
+                )
 
             for item in data:
                 news.append(
                     {
-                        "stock_id": stock_id,
                         "title": item["title"],
                         "content": item["description"], # 크롤러 도입하면 바꿀 예정
                         "summary": item["description"],
                         "url": item["originallink"],
                         "published_at": parsedate_to_datetime(item["pubDate"]),
+                        "stock_ticker": None if stock is None else stock["ticker"],
+                        "stock_name": None if stock is None else stock["name"]
                     }
                 )
         saved_news = self.news_repository.save_all(news)

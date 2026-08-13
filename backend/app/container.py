@@ -58,9 +58,7 @@ class Container:
             self.news_repository,
             self.news_embedding_repository,
             self.news_keyword_repository,
-            self.stock_repository,
             self.news_client,
-            self.stock_search_service,
             self.news_embedding_service
         )
 

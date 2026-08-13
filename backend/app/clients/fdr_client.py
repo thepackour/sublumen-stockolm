@@ -1,38 +1,47 @@
-from typing import Optional
-
 import FinanceDataReader as fdr
 import pandas as pd
 from pandas import DataFrame
 
+from app.dto.StockInfo import StockInfo
 
-class StockSymbolService:
 
-    def __init__(self):
-        self.stocks: Optional[DataFrame] = None
+class FdrClient:
 
-    def initialize(self):
+    def get_stock_list(self) -> list[StockInfo]:
         krx = fdr.StockListing("KRX-DESC").rename(columns={"Code": "Symbol"})
         nasdaq = fdr.StockListing("NASDAQ")
 
-        self.stocks = pd.concat([krx, nasdaq], ignore_index=True)
-
-    def find_symbol(self, keyword: str) -> Optional[str]:
-        result = self.search_stock(keyword)
-
-        if len(result) == 0:
-            return None
-
-        return result[0]["Symbol"]
-
-    def search_stock(self, keyword: str, limit = None) -> list[dict]:
-        result = self.stocks[
-            self.stocks["Name"].str.contains(keyword, case=False, na=False)
+        return [
+            StockInfo(
+                symbol=row.Symbol,
+                name=row.Name,
+                market=row.Market,
+                sector=None if pd.isna(row.Sector) else row.Sector,
+                industry=None if pd.isna(row.Industry) else row.Industry,
+                # is_domestic=row.Market in ["KRX"],
+                # currency=None if pd.isna(row.Market) else market_currency_table.get(row.Market)
+            )
+            for row in pd.concat([krx, nasdaq], ignore_index=True).itertuples()
+            if not pd.isna(row.Market)
         ]
 
-        return result[:limit].to_dict("records")
+    def get_stock_price(
+            self,
+            symbol: str,
+            start: str,
+            end: str | None = None,
+    ) -> DataFrame:
+        """
 
-    def get_stock(self, symbol: str) -> dict:
-        return self.stocks[self.stocks["Symbol"] == symbol].iloc[0].to_dict()
+        Args:
+            symbol: 주식 심볼(ticker)
+            start: 시작 일자
+            end: 끝 일자
 
-    def get_stock_by_stock_id(self, stock_id: int) -> dict:
-        return self.stocks[self.stocks["StockId"] == stock_id].iloc[0].to_dict()
+        Returns: DataFrame (!!!)
+
+        """
+        return fdr.DataReader(symbol, start, end)
+
+    def get_today_stock_price(self, symbol: str) -> DataFrame:
+        return self.get_stock_price(symbol, "TODAY", "TODAY")

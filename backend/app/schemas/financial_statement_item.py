@@ -35,7 +35,7 @@ class FinancialStatementItem(Base, TimestampMixin):
         nullable=False
     )
 
-    order: Mapped[Integer] = mapped_column(
+    order: Mapped[int] = mapped_column(
         Integer,
         nullable=False
     )
@@ -83,5 +83,5 @@ class FinancialStatementItem(Base, TimestampMixin):
             "account_name",
             "order",
             name="uq_financial_statement_item"
-        )
+        ),
     )

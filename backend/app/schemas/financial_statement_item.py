@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Integer, ForeignKey, String, Date
+from sqlalchemy import Integer, ForeignKey, String, Date, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.schemas import Base, TimestampMixin
@@ -28,6 +28,11 @@ class FinancialStatementItem(Base, TimestampMixin):
 
     account_name: Mapped[str] = mapped_column(
         String(100),
+        nullable=False
+    )
+
+    order: Mapped[Integer] = mapped_column(
+        Integer,
         nullable=False
     )
 
@@ -65,4 +70,14 @@ class FinancialStatementItem(Base, TimestampMixin):
     statement = relationship(
         "FinancialStatement",
         back_populates="items"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "statement_id",
+            "statement_type",
+            "account_name",
+            "order",
+            name="uq_financial_statement_item"
+        )
     )

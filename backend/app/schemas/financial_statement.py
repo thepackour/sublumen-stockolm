@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.schemas.database import Base, TimestampMixin
@@ -17,6 +17,8 @@ class FinancialStatement(Base, TimestampMixin):
 
     fs_div: Mapped[str] = mapped_column(String(3), nullable=False)
     fs_name: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    receipt_no: Mapped[str] = mapped_column(String(20), nullable=False)
     
     items = relationship(
         "FinancialStatementItem",
@@ -26,4 +28,12 @@ class FinancialStatement(Base, TimestampMixin):
     stock: Mapped["Stock"] = relationship(
         "Stock",
         back_populates="financial_statements"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "receipt_no",
+            "fs_div",
+            name="uq_financial_statement_receipt_fs_div"
+        ),
     )

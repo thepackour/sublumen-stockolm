@@ -13,15 +13,15 @@ class News(Base, TimestampMixin):
     __tablename__ = "news"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    stock_id: Mapped[Optional[int]] = mapped_column(ForeignKey("stocks.id"), nullable=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     url: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    stock_ticker: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    stock_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
-    stock: Mapped[Optional["Stock"]] = relationship(back_populates="news_items")
     embeddings: Mapped[Optional["NewsEmbedding"]] = relationship(
         "NewsEmbedding",
         back_populates="news"

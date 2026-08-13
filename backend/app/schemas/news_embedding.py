@@ -26,12 +26,6 @@ class NewsEmbedding(Base, TimestampMixin):
         index=True
     )
 
-    stock_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("stocks.id"),
-        nullable=True,
-        index=True
-    )
-
     chunk_index: Mapped[int] = mapped_column(
         Integer,
         nullable=False
@@ -56,3 +50,9 @@ class NewsEmbedding(Base, TimestampMixin):
         "News",
         back_populates="embeddings"
     )
+
+    def get_stock_ticker(self) -> Optional[str]:
+        return self.news.stock_ticker
+
+    def get_stock_name(self) -> Optional[str]:
+        return self.news.stock_name

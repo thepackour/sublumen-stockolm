@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, func, case
 
 from app.schemas.stock import Stock
 
@@ -63,17 +63,35 @@ class StockRepository:
             keyword: str,
             limit: int | None = None,
     ) -> list[Stock]:
+        similarity = func.similarity(
+            Stock.name,
+            keyword,
+        )
+
+        exact_match = case(
+            (Stock.name == keyword, 1),
+            else_=0,
+        )
+
         stmt = (
             select(Stock)
             .where(
-                Stock.name.ilike(f"%{keyword}%")
+                similarity >= 0.3
+            )
+            .order_by(
+                exact_match.desc(),
+                similarity.desc(),
             )
         )
 
         if limit is not None:
             stmt = stmt.limit(limit)
 
-        return list(self.session_factory().scalars(stmt).all())
+        return list(
+            self.session_factory()
+            .scalars(stmt)
+            .all()
+        )
 
     def find(self, stock_id: int) -> Optional[Stock]:
         stmt = (

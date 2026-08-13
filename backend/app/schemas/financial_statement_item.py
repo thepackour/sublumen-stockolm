@@ -7,6 +7,10 @@ from app.schemas import Base, TimestampMixin
 
 
 class FinancialStatementItem(Base, TimestampMixin):
+    """
+    재무제표인 경우에는 previous_... 필드 생략
+    """
+
     __tablename__ = "financial_statement_items"
 
     id: Mapped[int] = mapped_column(

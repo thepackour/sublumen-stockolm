@@ -78,3 +78,16 @@ class CorpInfoRepository:
             stmt = stmt.limit(limit)
 
         return list(self.session_factory().scalars(stmt).all())
+
+    def find_all_by_symbols(
+            self,
+            symbols: list[str],
+    ) -> list[CorpInfo]:
+        stmt = (
+            select(CorpInfo)
+            .where(CorpInfo.corp_code.in_(symbols))
+        )
+        return list(self.session_factory().execute(stmt).all())
+
+    def find_all(self) -> list[CorpInfo]:
+        return list(self.session_factory().execute(select(CorpInfo)).all())

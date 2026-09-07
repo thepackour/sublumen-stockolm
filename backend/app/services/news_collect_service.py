@@ -41,13 +41,6 @@ class NewsCollectService:
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            stock = self.stock_repository.search_stocks_by_keyword(target.keyword)[0]
-            if not stock:
-                logger.info(
-                    "search_stocks_by_keyword: No related stocks with the keyword (%s)\n",
-                    target
-                )
-
             crawlers = CrawlerFactory()
             for item in data:
                 article = None
@@ -62,7 +55,7 @@ class NewsCollectService:
                     )
                 news.append(
                     {
-                        "stock_id": None if stock is None else stock.id,
+                        "stock_id": None,
                         "title": item["title"],
                         "content": item["description"] if article is None else article,
                         "summary": item["description"], # 요약하는 기능 구현하면 사용하면 바꿀 예정
@@ -83,13 +76,9 @@ class NewsCollectService:
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            symbol = self.stock_search_service.find_symbol(target.keyword)
-
+            # KIS reference data is not persisted. News remains durable, but
+            # it no longer requires a locally stored stock master row.
             stock_id = None
-            if symbol is not None:
-                stock = self.stock_repository.find_by_symbol(symbol)
-                if stock:
-                    stock_id = stock.id
 
             for item in data:
                 news.append(

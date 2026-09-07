@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from app.container import container
 
 from app.api.v1.stock import router as stock_router
+from app.api.v1.financial_statement import router as financial_statement_router
 from app.api.v1.news import router as news_router
 from app.api.v1.analysis import router as analysis_router
 from app.api.v1.backtest import router as backtest_router
@@ -35,6 +36,7 @@ app = FastAPI(title="Sublumen Stockolm API", lifespan=lifespan)
 register_exception_handlers(app)
 
 app.include_router(stock_router)
+app.include_router(financial_statement_router)
 app.include_router(news_router)
 app.include_router(analysis_router)
 app.include_router(backtest_router)

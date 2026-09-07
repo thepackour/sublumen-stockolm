@@ -1,22 +1,19 @@
-from typing import Optional
-
 from app.core.error_code import ErrorCode
 from app.core.exceptions import ProjectException
-from app.repositories.postgres_stock_repository import StockRepository
+from app.clients.kis_client import KisApiClient
 
 
 class StockSearchService:
 
     def __init__(
             self,
-            stock_repository: StockRepository
+            kis_client: KisApiClient
     ):
-        self.stock_repository = stock_repository
+        self.kis_client = kis_client
 
-    def find_symbol(self, keyword: str) -> Optional[str]:
-        result = self.stock_repository.search_stocks_by_keyword(keyword)
-
-        if len(result) == 0:
+    def find_symbol(self, keyword: str) -> str:
+        if not keyword or not keyword.isdigit() or len(keyword) != 6:
             raise ProjectException(ErrorCode.STOCK404_1)
-
-        return result[0].symbol
+        if not self.kis_client.search_stock(keyword):
+            raise ProjectException(ErrorCode.STOCK404_1)
+        return keyword

@@ -1,3 +1,5 @@
+import json
+
 print("========== APP START ==========")
 
 import os
@@ -45,6 +47,10 @@ def get_news(query, page, size=10):
     print("get_news() 실행됨!!!!!!!!!!!!!")
     return fetch_json("/api/v1/news", {"query": query, "page": int(page), "size": int(size)})
 
+def get_financial_statements(query: str, start: str, end: str = None):
+    print("get_financial_statements() 실행됨!!!!!!!!!!!!!")
+    return fetch_json("/api/v1/financial-statement", {"query": query, "start": start, "end": end})
+
 
 st.title("Stock-olm")
 st.markdown(
@@ -81,7 +87,7 @@ with search_tab:
     with st.container():
         query = st.text_input(
             label="예: 검색어를 입력하세요",
-            placeholder="삼성전자",
+            placeholder="삼성전자"
         )
         page = int(st.number_input(
             label="page",
@@ -94,7 +100,7 @@ with search_tab:
             width=50
         ))
 
-    if st.button("실행"):
+    if st.button("실행", key="news_run"):
         print("버튼 눌림!!!!!!!!!!!!!!")
         if not query.strip():
             st.warning("검색어를 입력해 주세요.")
@@ -115,6 +121,49 @@ with search_tab:
                 for i in data["items"]:
                     for stock in result:
                         st.write(result.get("data", "응답이 없습니다."))
+
+    st.markdown("### 키워드로 재무제표 검색")
+    st.write("GET /api/v1/financial-statement")
+
+    with st.container():
+        query = st.text_input(
+            label="예: 검색어를 입력하세요",
+            placeholder="삼성전자",
+            key="fs_query"
+        )
+        start = st.text_input(
+            label="시작 연도, 분기",
+            placeholder="예: 2026-1",
+            width=200,
+            key="fs_start"
+        )
+        end = st.text_input(
+            label="끝 연도, 분기 (생략 가능)",
+            placeholder="예: 2026-2",
+            width=200,
+            key="fs_end"
+        )
+
+    if st.button("실행", key="fs_run"):
+        if not query.strip():
+            st.warning("검색어를 입력해 주세요.")
+        else:
+            with st.spinner("응답을 기다리는 중입니다..."):
+                result = get_financial_statements(query.strip(), start.strip(), end.strip())
+                print("result.values: ", result.values())
+            if "error" in result:
+                st.error(f"요청 실패: {result['error']}")
+            elif int(result["status"]) >= 400:
+                st.error(f"요청 실패: {result['message']}")
+            else:
+                st.success("응답을 받았습니다.")
+                st.markdown("### 응답")
+                data = result["data"]
+                st.write("데이터 수:", data["count"])
+                st.code(
+                    json.dumps(data, ensure_ascii=False, indent=2),
+                    language="json"
+                )
 
 
 

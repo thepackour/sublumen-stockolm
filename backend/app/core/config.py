@@ -14,6 +14,9 @@ class Settings:
     NAVER_CLIENT_ID: str = os.getenv("NAVER_CLIENT_ID", "")
     NAVER_CLIENT_SECRET: str = os.getenv("NAVER_CLIENT_SECRET", "")
     DART_API_KEY: str = os.getenv("DART_API_KEY", "")
+    STOCK_CATALOG_CACHE_TTL_SECONDS: int = int(
+        os.getenv("STOCK_CATALOG_CACHE_TTL_SECONDS", "86400")
+    )
 
 
 settings = Settings()

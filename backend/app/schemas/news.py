@@ -60,10 +60,12 @@ class News(Base, TimestampMixin):
     )
     flag: Mapped[Flag] = mapped_column(
         Integer,
-        nullable=False
+        default=Flag.COMPLETED,
+        nullable=False,
     )
 
-    embeddings: Mapped[Optional["NewsEmbedding"]] = relationship(
+    embeddings: Mapped[list["NewsEmbedding"]] = relationship(
         "NewsEmbedding",
-        back_populates="news"
+        back_populates="news",
+        cascade="all, delete-orphan",
     )

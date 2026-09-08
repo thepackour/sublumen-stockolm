@@ -8,3 +8,5 @@ class StockInfo:
     market: str
     sector: str | None
     industry: str | None
+    is_domestic: bool
+    currency: str | None

@@ -9,6 +9,7 @@ from app.repositories.postgres_news_embedding_repository import NewsEmbeddingRep
 from app.repositories.postgres_news_repository import NewsRepository
 from app.services.crawlers.crawler_factory import CrawlerFactory
 from app.services.news_embedding_service import NewsEmbeddingService
+from app.services.stock_search_service import StockSearchService
 
 
 class NewsCollectService:
@@ -19,12 +20,14 @@ class NewsCollectService:
             news_keyword_repository: NewsKeywordRepository,
             news_client: NewsClient,
             news_embedding_service: NewsEmbeddingService,
+            stock_search_service: StockSearchService,
     ):
         self.news_repository = news_repository
         self.news_embedding_repository = news_embedding_repository
         self.news_keyword_repository = news_keyword_repository
         self.news_client = news_client
         self.news_embedding_service = news_embedding_service
+        self.stock_search_service = stock_search_service
 
         self.last_collected_at: datetime = datetime.now()
 
@@ -35,11 +38,7 @@ class NewsCollectService:
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            # 한국투자증권 API에 맞춰서 바꿔야 함!!!
-            stock = {
-                "ticker": "123456",
-                "name": "ㅇㅇ주식회사"
-            }
+            stock = self._find_stock(target.keyword)
             if not stock:
                 logger.info(
                     "collect_news: No related stocks with the keyword (%s)\n",
@@ -65,8 +64,8 @@ class NewsCollectService:
                         "summary": item["description"], # 요약하는 기능 구현하면 사용하면 바꿀 예정
                         "url": item["originallink"],
                         "published_at": parsedate_to_datetime(item["pubDate"]),
-                        "stock_ticker": None if stock is None else stock["ticker"],
-                        "stock_name": None if stock is None else stock["name"]
+                        "stock_ticker": None if stock is None else stock.symbol,
+                        "stock_name": None if stock is None else stock.name,
                     }
                 )
         saved_news = self.news_repository.save_all(news)
@@ -82,11 +81,7 @@ class NewsCollectService:
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            # 한국투자증권 API에 맞춰서 바꿔야 함!!!
-            stock = {
-                "ticker": "123456",
-                "name": "ㅇㅇ주식회사"
-            }
+            stock = self._find_stock(target.keyword)
             if not stock:
                 logger.info(
                     "collect_news_with_priority: No related stocks with the keyword (%s)\n",
@@ -101,8 +96,8 @@ class NewsCollectService:
                         "summary": item["description"],
                         "url": item["originallink"],
                         "published_at": parsedate_to_datetime(item["pubDate"]),
-                        "stock_ticker": None if stock is None else stock["ticker"],
-                        "stock_name": None if stock is None else stock["name"]
+                        "stock_ticker": None if stock is None else stock.symbol,
+                        "stock_name": None if stock is None else stock.name,
                     }
                 )
         saved_news = self.news_repository.save_all(news)
@@ -111,6 +106,17 @@ class NewsCollectService:
         self.news_embedding_repository.save_all(embeddings)
 
         return {"news_count": len(saved_news), "embeddings_count": len(embeddings)}
+
+    def _find_stock(self, keyword: str):
+        try:
+            stocks = self.stock_search_service.search(keyword, limit=1)
+        except Exception:
+            logger.exception(
+                "Failed to resolve a stock for news keyword (%s)",
+                keyword,
+            )
+            return None
+        return stocks[0] if stocks else None
 
     def collect_latest_news_for_agent(
             self,

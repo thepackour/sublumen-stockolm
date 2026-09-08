@@ -23,7 +23,6 @@ class NewsEmbeddingService:
         return [
             NewsEmbedding(
                 news_id=news.id,
-                stock_id=news.stock_id,
                 chunk_index=i,
                 chunk_text=chunks[i],
                 embedding=embeddings[i].values,

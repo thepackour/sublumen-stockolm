@@ -13,11 +13,11 @@ class NewsRepository:
             stmt = select(News).where(News.url == url)
             return db.scalar(stmt)
 
-    def find_latest(self, stock_id: int, limit: int = 10):
+    def find_latest(self, stock_ticker: str, limit: int = 10):
         with self.session_factory() as db:
             stmt = (
                 select(News)
-                .where(News.stock_id == stock_id)
+                .where(News.stock_ticker == stock_ticker)
                 .order_by(News.published_at.desc())
                 .limit(limit)
             )

@@ -5,8 +5,7 @@ from datetime import datetime
 from sqlalchemy import Integer, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.schemas import TimestampMixin
-from app.schemas.database import Base
+from app.schemas.database import Base, TimestampMixin
 
 
 class NewsKeyword(Base, TimestampMixin):

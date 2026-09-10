@@ -1,6 +1,7 @@
 import io
 import zipfile
 import xml.etree.ElementTree as ET
+from datetime import datetime
 
 
 def convert(zip_file: bytes) -> list[dict]:
@@ -12,8 +13,11 @@ def convert(zip_file: bytes) -> list[dict]:
         {
             "corp_code": company.findtext("corp_code"),
             "corp_name": company.findtext("corp_name"),
-            "stock_code": company.findtext("stock_code").strip(),  # 상장사는 6자리, 비상장사는 빈값/공백
-            "modify_date": company.findtext("modify_date"),
+            "corp_eng_name": company.findtext("corp_eng_name") or None,
+            "stock_code": (company.findtext("stock_code") or "").strip() or None,
+            "modify_date": datetime.strptime(
+                company.findtext("modify_date"), "%Y%m%d"
+            ).date(),
         }
         for company in root.findall("list")
     ]

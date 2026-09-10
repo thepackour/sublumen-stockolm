@@ -1,5 +1,13 @@
+from .backtest_tools import BacktestTool
 from .financial_statement_tools import FinancialStatementTool
-from .stock_tools import StockTool
 from .news_tools import NewsTool
+from .stock_tools import StockTool
+from .technical_analysis_tools import TechnicalAnalysisTool
 
-__all__ = ["FinancialStatementTool", "StockTool", "NewsTool"]
+__all__ = [
+    "BacktestTool",
+    "FinancialStatementTool",
+    "NewsTool",
+    "StockTool",
+    "TechnicalAnalysisTool",
+]

@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.container import container
 from app.schemas.backtest import BacktestCreateRequest
 from app.services.backtest_service import BacktestService
 
@@ -8,14 +9,13 @@ router = APIRouter(
     tags=["Backtests"]
 )
 
-service = BacktestService()
+def get_backtest_service() -> BacktestService:
+    return container.backtest_service
 
 
 @router.post("")
-def create_backtest(request: BacktestCreateRequest):
+def create_backtest(
+    request: BacktestCreateRequest,
+    service: BacktestService = Depends(get_backtest_service),
+):
     return service.create_backtest(request)
-
-
-@router.get("/{backtest_id}")
-def get_backtest(backtest_id: str):
-    return service.get_backtest(backtest_id)

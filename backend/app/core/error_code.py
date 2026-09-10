@@ -9,12 +9,16 @@ class ErrorCode(Enum):
     ANALYSIS404_1 = (404, "ANALYSIS404_1", "분석을 찾을 수 없습니다.")
     ANALYSIS400_1 = (400, "ANALYSIS400_1", "분석 요청이 유효하지 않습니다.")
 
+    TECHNICAL_ANALYSIS400_1 = (400, "TECHNICAL_ANALYSIS400_1", "기술적 분석 요청 또는 전략 파라미터가 유효하지 않습니다.")
+    TECHNICAL_ANALYSIS400_2 = (400, "TECHNICAL_ANALYSIS400_2", "기술 지표를 계산하기 위한 주가 데이터가 부족합니다.")
+
     STOCK400_1 = (400, "STOCK400_1", "종목 요청이 유효하지 않습니다.")
     STOCK404_1 = (404, "STOCK404_1", "종목을 찾을 수 없습니다.")
 
     EXCHANGERATE404_1 = (404, "EXCHANGERATE404_1", "환율 정보를 찾을 수 없습니다.")
 
     BACKTEST404_1 = (404, "BACKTEST404_1", "백테스트 결과를 찾을 수 없습니다.")
+    BACKTEST400_1 = (400, "BACKTEST400_1", "백테스트 요청이 유효하지 않습니다.")
 
     FS400_1 = (400, "FS400_1", "end_year와 end_quarter는 함께 지정해야 합니다.")
     FS400_2 = (400, "FS400_2", "시작 일자는 2015년 이후여야 합니다.")

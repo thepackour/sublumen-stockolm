@@ -1,4 +1,9 @@
-from app.ai.tools import FinancialStatementTool, StockTool
+from app.ai.tools import (
+    BacktestTool,
+    FinancialStatementTool,
+    StockTool,
+    TechnicalAnalysisTool,
+)
 from app.ai.tools.news_tools import NewsTool
 from app.clients.dart_client import DartClient
 from app.clients.fdr_client import FdrClient
@@ -17,6 +22,8 @@ from app.services.news_collect_service import NewsCollectService
 from app.services.news_embedding_service import NewsEmbeddingService
 from app.services.news_query_service import NewsQueryService
 from app.services.stock_query_service import StockQueryService
+from app.services.backtest_service import BacktestService
+from app.services.technical_analysis_service import TechnicalAnalysisService
 
 
 class Container:
@@ -52,6 +59,8 @@ class Container:
             self.fdr_client,
         )
         self.exchange_rate_service = ExchangeRateService(self.fdr_client)
+        self.technical_analysis_service = TechnicalAnalysisService(self.fdr_client)
+        self.backtest_service = BacktestService(self.technical_analysis_service)
         self.financial_statement_service = FinancialStatementService(
             self.dart_client,
             self.corp_info_repository,
@@ -82,6 +91,14 @@ class Container:
         )
         self.financial_statement_tool = FinancialStatementTool(
             self.financial_statement_service
+        )
+        self.technical_analysis_tool = TechnicalAnalysisTool(
+            self.technical_analysis_service,
+            self.stock_search_service,
+        )
+        self.backtest_tool = BacktestTool(
+            self.backtest_service,
+            self.stock_search_service,
         )
 
 

@@ -1,31 +1,15 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Optional
+from pydantic import Field
 
-from pydantic import BaseModel
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.schemas.database import Base, TimestampMixin
+from app.schemas.technical_analysis import DateRangeRequest
+from app.technical_analysis import StrategyName
 
 
-class Backtest(Base, TimestampMixin):
-    __tablename__ = "backtests"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    strategy_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    stock_id: Mapped[int] = mapped_column(ForeignKey("stocks.id"), nullable=False)
-    start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    cagr: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    sharpe_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    max_drawdown: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-
-    stock: Mapped["Stock"] = relationship("Stock", back_populates="backtests")
-
-
-class BacktestCreateRequest(BaseModel):
-    symbol: str
-    strategy: str = "buy_and_hold"
-    initial_capital: float = 1000000.0
+class BacktestCreateRequest(DateRangeRequest):
+    symbol: str = Field(min_length=1)
+    strategy: StrategyName = StrategyName.SMA_CROSSOVER
+    parameters: dict[str, float] = Field(default_factory=dict)
+    initial_capital: float = Field(default=1_000_000.0, gt=0)
+    commission_rate: float = Field(default=0.00015, ge=0, lt=1)
+    slippage_rate: float = Field(default=0.0005, ge=0, lt=1)

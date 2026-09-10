@@ -17,11 +17,15 @@ llm = ChatGoogleGenerativeAI(
 stock_tool = container.stock_tool
 news_tool = container.news_tool
 financial_statement_tool = container.financial_statement_tool
+technical_analysis_tool = container.technical_analysis_tool
+backtest_tool = container.backtest_tool
 
 tools = (
     stock_tool.get_tools()
     + news_tool.get_tools()
     + financial_statement_tool.get_tools()
+    + technical_analysis_tool.get_tools()
+    + backtest_tool.get_tools()
 )
 
 system_prompt = """
@@ -29,6 +33,9 @@ system_prompt = """
 
 필요한 경우 Tool을 사용하여 답변한다.
 모르면 추측하지 말고 Tool을 사용한다.
+
+기술적 분석 결과는 수익을 보장하는 추천이 아니라 참고자료임을 명확히 설명한다.
+백테스트를 미래 성과처럼 표현하지 않는다.
 
 답변은 JSON으로 출력하지 않고 사용자 친화적으로 요약하라.
 """

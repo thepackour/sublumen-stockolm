@@ -16,8 +16,13 @@ llm = ChatGoogleGenerativeAI(
 
 stock_tool = container.stock_tool
 news_tool = container.news_tool
+financial_statement_tool = container.financial_statement_tool
 
-tools = stock_tool.get_tools() + news_tool.get_tools()
+tools = (
+    stock_tool.get_tools()
+    + news_tool.get_tools()
+    + financial_statement_tool.get_tools()
+)
 
 system_prompt = """
 너는 주식 투자 도우미이다.

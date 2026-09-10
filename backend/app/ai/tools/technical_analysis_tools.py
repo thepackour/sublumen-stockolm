@@ -26,6 +26,8 @@ class TechnicalAnalysisTool:
         parameters: dict[str, float] | None = None,
     ) -> dict:
         """종목의 기술 지표와 최신 매매 신호를 계산한다."""
+        print("analyze_technical_indicators is used.")
+
         symbol = self.stock_search_service.find_symbol(stock)
         result = self.service.analyze(
             symbol=symbol,

@@ -28,6 +28,8 @@ class BacktestTool:
         parameters: dict[str, float] | None = None,
     ) -> dict:
         """종목과 기술적 전략의 과거 성과를 검증한다."""
+        print("backtest_technical_strategy is used.")
+
         symbol = self.stock_search_service.find_symbol(stock)
         request = BacktestCreateRequest(
             symbol=symbol,

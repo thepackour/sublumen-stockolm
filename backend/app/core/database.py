@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
@@ -42,3 +42,21 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+
+    # ``create_all`` creates missing tables but does not alter tables that
+    # already exist.  These columns replaced the former stock relation, so
+    # add them for databases created by older versions of the application.
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as connection:
+            connection.execute(text("""
+                ALTER TABLE news
+                ADD COLUMN IF NOT EXISTS stock_ticker VARCHAR(100)
+            """))
+            connection.execute(text("""
+                ALTER TABLE news
+                ADD COLUMN IF NOT EXISTS stock_name VARCHAR(100)
+            """))
+            connection.execute(text("""
+                ALTER TABLE news
+                ADD COLUMN IF NOT EXISTS flag INTEGER NOT NULL DEFAULT 0
+            """))

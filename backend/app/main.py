@@ -10,16 +10,15 @@ from app.api.v1.technical_analysis import router as technical_analysis_router
 from app.api.v1.backtest import router as backtest_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.exchange_rate import router as exchange_rate_router
-from app.core.database import engine
+from app.core.database import init_db
 from app.schedulers.news_collect_scheduler import start_scheduler, shutdown_scheduler, register_jobs
 
 from app.core.handlers import register_exception_handlers
-from app.schemas import Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    init_db()
     container.initialize()
 
     register_jobs()

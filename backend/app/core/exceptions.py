@@ -7,3 +7,4 @@ class ProjectException(Exception):
         self.status = error_code.status
         self.code = error_code.code
         self.message = error_code.message
+        super().__init__(self.message)

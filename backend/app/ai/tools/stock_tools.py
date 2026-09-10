@@ -24,7 +24,7 @@ class StockTool:
 
         print("stock_price is used.")
 
-        symbol = self.stock_search_service.find_symbol(stock_name)
+        symbol = self.stock_search_service.find_symbol(stock_name)[0]
         if symbol is None: return {"error": f"No data found for '{stock_name}'"}
 
         return self.stock_query_service.get_stock_price_for_agent(symbol)
@@ -46,7 +46,7 @@ class StockTool:
 
         print("stock_history is used.")
 
-        symbol = self.stock_search_service.find_symbol(stock_name)
+        symbol = self.stock_search_service.find_symbol(stock_name)[0]
         if symbol is None: return {"error": f"No data found for '{stock_name}'"}
 
         return self.stock_query_service.get_stock_history(symbol, start_date, end_date)

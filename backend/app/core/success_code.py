@@ -15,6 +15,9 @@ class SuccessCode(Enum):
 
     EXCHANGERATE200_1 = (200, "EXCHANGERATE200_1", "환율 조회에 성공했습니다.")
 
+    FS200_1 = (200, "FS200_1", "재무제표 조회에 성공했습니다.")
+    FS200_2 = (200, "FS200_2", "재무제표 수집에 성공했습니다.")
+
     @property
     def status(self):
         return self.value[0]

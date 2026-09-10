@@ -1,6 +1,7 @@
 from datetime import datetime
 from email.utils import parsedate_to_datetime
-from warnings import deprecated
+
+from typing_extensions import deprecated
 
 from app.clients.news_client import NewsClient
 from app.core.logger import logger

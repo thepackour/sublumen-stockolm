@@ -15,4 +15,5 @@ psycopg2-binary
 pytest
 finance-datareader
 pandas
+typing-extensions
 bs4

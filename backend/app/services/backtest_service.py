@@ -1,32 +1,61 @@
-from app.repositories.mock_stock_repository import StockRepository
-from app.schemas.backtest import BacktestCreateRequest
-from app.core.exceptions import ProjectException
-from app.core.error_code import ErrorCode
+from __future__ import annotations
 
-stock_repository = StockRepository()
+from app.core.error_code import ErrorCode
+from app.core.exceptions import ProjectException
+from app.schemas.backtest import BacktestCreateRequest
+from app.services.technical_analysis_service import TechnicalAnalysisService
+from app.technical_analysis import get_strategy
+from app.technical_analysis.backtester import run_backtest
+from app.technical_analysis.strategies import StrategyParameterError
 
 
 class BacktestService:
+    def __init__(self, technical_analysis_service: TechnicalAnalysisService):
+        self.technical_analysis_service = technical_analysis_service
 
-    def __init__(self):
-        self.backtest_store: dict[str, dict] = {}
+    def create_backtest(self, request: BacktestCreateRequest) -> dict:
+        try:
+            strategy = get_strategy(request.strategy)
+            requested_start, requested_end, prices = (
+                self.technical_analysis_service.load_prices(
+                    request.symbol,
+                    request.start_date,
+                    request.end_date,
+                    strategy.required_history(request.parameters),
+                )
+            )
+            signals, parameters = strategy.apply(prices, request.parameters)
+            signals = signals.loc[
+                (signals.index.date >= requested_start)
+                & (signals.index.date <= requested_end)
+            ]
+            if signals.empty or not strategy.has_ready_indicators(signals):
+                raise ValueError("기술 지표를 계산하기 위한 데이터가 부족합니다.")
+            metrics = run_backtest(
+                signals,
+                request.initial_capital,
+                request.commission_rate,
+                request.slippage_rate,
+            )
+        except (StrategyParameterError, ValueError) as exc:
+            raise ProjectException(ErrorCode.BACKTEST400_1) from exc
 
-    def create_backtest(self, request: BacktestCreateRequest):
-        backtest_id = f"backtest-{len(self.backtest_store) + 1}"
-        detail = stock_repository.get_stock_detail(request.symbol)
-        self.backtest_store[backtest_id] = {
-            "backtestId": backtest_id,
-            "symbol": detail["symbol"],
-            "strategy": request.strategy,
-            "initialCapital": request.initial_capital,
-            "finalValue": round(request.initial_capital * 1.18, 2),
-            "returnRate": 18.0,
-            "sharpeRatio": 1.24,
+        return {
+            "symbol": request.symbol.upper(),
+            "strategy": strategy.name.value,
+            "strategy_display_name": strategy.display_name,
+            "parameters": parameters,
+            "period": {
+                "start_date": requested_start.isoformat(),
+                "end_date": requested_end.isoformat(),
+            },
+            "execution_policy": {
+                "position": "long_only_all_in",
+                "signal_price": "close",
+                "execution_price": "next_session_open",
+                "commission_rate": request.commission_rate,
+                "slippage_rate": request.slippage_rate,
+            },
+            **metrics,
+            "disclaimer": "과거 성과는 미래 수익을 보장하지 않습니다.",
         }
-        return self.backtest_store[backtest_id]
-
-
-    def get_backtest(self, backtest_id: str):
-        if backtest_id not in self.backtest_store:
-            raise ProjectException(ErrorCode.BACKTEST404_1)
-        return self.backtest_store[backtest_id]

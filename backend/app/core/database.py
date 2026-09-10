@@ -16,7 +16,6 @@ def create_db_engine(database_url: Optional[str] = None):
 
     if url.startswith("sqlite"):
         return create_engine(url)
-    print("db url: " + url)
     return create_engine(
         url,
         pool_pre_ping=True,

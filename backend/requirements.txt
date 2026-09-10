@@ -16,4 +16,5 @@ pytest
 finance-datareader
 pandas
 typing-extensions
+apscheduler>=3.11,<4
 bs4

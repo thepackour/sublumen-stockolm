@@ -52,7 +52,7 @@ def register_jobs():
     scheduler.add_job(
         collect_news_job,
         'interval',
-        hour='48',
+        hours=48,
         args=[[1, 2]],
         id='news_collect_1_2',
         replace_existing=True

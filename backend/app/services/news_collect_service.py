@@ -1,15 +1,15 @@
 from datetime import datetime
 from email.utils import parsedate_to_datetime
+from warnings import deprecated
 
-from app.services.stock_search_service import StockSearchService
 from app.clients.news_client import NewsClient
 from app.core.logger import logger
 from app.repositories.news_keyword_repository import NewsKeywordRepository
 from app.repositories.postgres_news_embedding_repository import NewsEmbeddingRepository
 from app.repositories.postgres_news_repository import NewsRepository
-from app.repositories.postgres_stock_repository import StockRepository
 from app.services.crawlers.crawler_factory import CrawlerFactory
 from app.services.news_embedding_service import NewsEmbeddingService
+from app.services.stock_search_service import StockSearchService
 
 
 class NewsCollectService:
@@ -18,31 +18,30 @@ class NewsCollectService:
             news_repository: NewsRepository,
             news_embedding_repository: NewsEmbeddingRepository,
             news_keyword_repository: NewsKeywordRepository,
-            stock_repository: StockRepository,
             news_client: NewsClient,
-            stock_search_service: StockSearchService,
             news_embedding_service: NewsEmbeddingService,
+            stock_search_service: StockSearchService,
     ):
         self.news_repository = news_repository
         self.news_embedding_repository = news_embedding_repository
         self.news_keyword_repository = news_keyword_repository
-        self.stock_repository = stock_repository
         self.news_client = news_client
-        self.stock_search_service = stock_search_service
         self.news_embedding_service = news_embedding_service
+        self.stock_search_service = stock_search_service
 
         self.last_collected_at: datetime = datetime.now()
 
+    @deprecated("collect_news_with_priority()를 사용하세요.")
     def collect_news(self) -> dict:
         targets = self.news_keyword_repository.find_collect_targets(datetime.now())
         news = []
         for target in targets:
             data = self.news_client.get_news_by_news_keyword(target)
 
-            stock = self.stock_repository.search_stocks_by_keyword(target.keyword)[0]
+            stock = self._find_stock(target.keyword)
             if not stock:
                 logger.info(
-                    "search_stocks_by_keyword: No related stocks with the keyword (%s)\n",
+                    "collect_news: No related stocks with the keyword (%s)\n",
                     target
                 )
 
@@ -60,12 +59,13 @@ class NewsCollectService:
                     )
                 news.append(
                     {
-                        "stock_id": None if stock is None else stock.id,
                         "title": item["title"],
                         "content": item["description"] if article is None else article,
                         "summary": item["description"], # 요약하는 기능 구현하면 사용하면 바꿀 예정
                         "url": item["originallink"],
                         "published_at": parsedate_to_datetime(item["pubDate"]),
+                        "stock_ticker": None if stock is None else stock.symbol,
+                        "stock_name": None if stock is None else stock.name,
                     }
                 )
         saved_news = self.news_repository.save_all(news)
@@ -74,6 +74,49 @@ class NewsCollectService:
         self.news_embedding_repository.save_all(embeddings)
 
         return {"news_count": len(saved_news), "embeddings_count": len(embeddings)}
+
+    def collect_news_with_priority(self, priority: int) -> dict:
+        targets = self.news_keyword_repository.find_targets_by_priority(priority)
+        news = []
+        for target in targets:
+            data = self.news_client.get_news_by_news_keyword(target)
+
+            stock = self._find_stock(target.keyword)
+            if not stock:
+                logger.info(
+                    "collect_news_with_priority: No related stocks with the keyword (%s)\n",
+                    target
+                )
+
+            for item in data:
+                news.append(
+                    {
+                        "title": item["title"],
+                        "content": item["description"], # 크롤러 도입하면 바꿀 예정
+                        "summary": item["description"],
+                        "url": item["originallink"],
+                        "published_at": parsedate_to_datetime(item["pubDate"]),
+                        "stock_ticker": None if stock is None else stock.symbol,
+                        "stock_name": None if stock is None else stock.name,
+                    }
+                )
+        saved_news = self.news_repository.save_all(news)
+        embeddings = []
+        for n in saved_news: embeddings.extend(self.news_embedding_service.embed_news(n))
+        self.news_embedding_repository.save_all(embeddings)
+
+        return {"news_count": len(saved_news), "embeddings_count": len(embeddings)}
+
+    def _find_stock(self, keyword: str):
+        try:
+            stocks = self.stock_search_service.search(keyword, limit=1)
+        except Exception:
+            logger.exception(
+                "Failed to resolve a stock for news keyword (%s)",
+                keyword,
+            )
+            return None
+        return stocks[0] if stocks else None
 
     def collect_latest_news_for_agent(
             self,

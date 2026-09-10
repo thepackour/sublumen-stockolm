@@ -1,6 +1,5 @@
 from app.core.error_code import ErrorCode
 from app.core.exceptions import ProjectException
-from app.repositories.postgres_stock_repository import StockRepository
 from app.services.stock_search_service import StockSearchService
 from app.clients.gemini_embedding import EmbeddingClient
 from app.dto.response.news_response import NewsResponse
@@ -15,13 +14,11 @@ class NewsQueryService:
             self,
             news_repository: NewsRepository,
             news_embedding_repository: NewsEmbeddingRepository,
-            stock_repository: StockRepository,
             stock_search_service: StockSearchService,
             embedding_client: EmbeddingClient
     ):
         self.news_repository = news_repository
         self.news_embedding_repository = news_embedding_repository
-        self.stock_repository = stock_repository
         self.stock_search_service = stock_search_service
         self.embedding_client = embedding_client
 
@@ -47,10 +44,8 @@ class NewsQueryService:
             url=news_map[id].url,
             published_at=news_map[id].published_at,
 
-            related_stock_id=news_map[id].stock_id,
-            related_stock_name=""
-            if news_map[id].stock_id is None
-            else self.stock_repository.find(news_map[id].stock_id).name,
+            related_stock_ticker=news_map[id].stock_ticker,
+            related_stock_name=news_map[id].stock_name,
         )
             for id in news_ids
         ]
@@ -98,14 +93,6 @@ class NewsQueryService:
             if news is None:
                 continue
 
-            stock_name = ""
-
-            if news.stock_id:
-                stock = self.stock_repository.find(
-                    news.stock_id
-                )
-                stock_name = stock.name
-
             contexts.append(
                 f"""
     [뉴스]
@@ -117,7 +104,7 @@ class NewsQueryService:
     {news.summary}
 
     관련 종목:
-    {stock_name}
+    {news.stock_name or ""}
 
     발행일:
     {news.published_at}
@@ -131,7 +118,11 @@ class NewsQueryService:
 
 
     def get_news_by_stock_name(self, stock_name: str, page: int = 1, size: int = 10):
-        stock = self.stock_repository.search_stocks_by_keyword(stock_name)
-        if not stock: raise ProjectException(ErrorCode.STOCK404_1)
-        result = self.news_repository.find_latest_by_stock_id(stock[0].id, page, size)
-        return result
+        stocks = self.stock_search_service.search(stock_name, limit=1)
+        if not stocks:
+            raise ProjectException(ErrorCode.STOCK404_1)
+        return self.news_repository.find_latest_by_stock_ticker(
+            stocks[0].symbol,
+            page,
+            size,
+        )

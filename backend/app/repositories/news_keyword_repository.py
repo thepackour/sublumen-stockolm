@@ -132,6 +132,23 @@ class NewsKeywordRepository:
             )
             result = db.scalars(stmt)
             return list(result)
+
+    def find_targets_by_priority(
+            self,
+            priority: int
+    ) -> list[NewsKeyword]:
+        with self.session_factory() as db:
+            stmt = (
+                select(NewsKeyword)
+                .where(
+                    NewsKeyword.priority == priority
+                )
+                .order_by(
+                    NewsKeyword.priority.desc()
+                )
+            )
+            result = db.scalars(stmt)
+            return list(result)
         
     def update_next_collect_at(
             self,

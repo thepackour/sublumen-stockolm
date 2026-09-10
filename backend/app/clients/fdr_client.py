@@ -13,13 +13,17 @@ class FdrClient:
 
         return [
             StockInfo(
-                symbol=row.Symbol,
-                name=row.Name,
-                market=row.Market,
+                symbol=str(row.Symbol),
+                name=str(row.Name),
+                market=str(row.Market),
                 sector=None if pd.isna(row.Sector) else row.Sector,
                 industry=None if pd.isna(row.Industry) else row.Industry,
-                # is_domestic=row.Market in ["KRX"],
-                # currency=None if pd.isna(row.Market) else market_currency_table.get(row.Market)
+                is_domestic=row.Market in {
+                    "KRX", "KOSPI", "KOSDAQ", "KOSDAQ GLOBAL", "KONEX"
+                },
+                currency="KRW" if row.Market in {
+                    "KRX", "KOSPI", "KOSDAQ", "KOSDAQ GLOBAL", "KONEX"
+                } else "USD",
             )
             for row in pd.concat([krx, nasdaq], ignore_index=True).itertuples()
             if not pd.isna(row.Market)
@@ -45,3 +49,17 @@ class FdrClient:
 
     def get_today_stock_price(self, symbol: str) -> DataFrame:
         return self.get_stock_price(symbol, "TODAY", "TODAY")
+
+    def get_exchange_rate(
+            self,
+            base_currency: str,
+            target_currency: str,
+            start: str,
+            end: str | None = None,
+    ) -> DataFrame:
+        """Fetch an exchange-rate series without persisting it."""
+        symbol = (
+            f"YAHOO:{base_currency.upper()}"
+            f"{target_currency.upper()}=X"
+        )
+        return fdr.DataReader(symbol, start, end)
